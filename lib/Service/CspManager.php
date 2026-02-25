@@ -1,7 +1,13 @@
 <?php
-namespace OCA\Raw\Service;
+/**
+ * SPDX-FileCopyrightText: 2024-2026 [ernolf] Raphael Gradenwitz
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+namespace OCA\FilesSharingRaw\Service;
 
 use OCP\IConfig;
+use OCP\Share;
+use OCP\Share\IManager;
 
 class CspManager {
 
@@ -13,6 +19,10 @@ class CspManager {
 
 	/** @var IConfig */
 	protected $configService;
+	/** @var IManager */
+	protected $shareManager;
+	/** @var RawShareRegistry */
+	protected $rawRegistry;
 
 	/** @var string runtime fallback (initialized from constant) */
 	protected $hardFallback;
@@ -22,8 +32,10 @@ class CspManager {
 	 *
 	 * @param IConfig $configService Nextcloud config service (use $this->config in controllers)
 	 */
-	public function __construct(IConfig $configService) {
+	public function __construct(IConfig $configService, IManager $shareManager, RawShareRegistry $rawRegistry) {
 		$this->configService = $configService;
+		$this->shareManager = $shareManager;
+		$this->rawRegistry = $rawRegistry;
 		// initialize the running hardFallback from the class constant
 		$this->hardFallback = self::HARD_FALLBACK;
 	}
@@ -70,35 +82,65 @@ class CspManager {
 		$uriPath = parse_url($uri, PHP_URL_PATH) ?: $uri;
 		$uriPath = urldecode($uriPath);
 
-		// Detect private URL form: /apps/raw/u/{userId}/...
+		// Normalize all URL forms into a canonical "/apps/files_sharing_raw/..." shape
+		// so that the same matching rules work for /raw (root alias) and /rss.
+		if (strpos($uriPath, '/raw') === 0) {
+			$uriPath = '/apps/files_sharing_raw' . substr($uriPath, 4);
+		} elseif (strpos($uriPath, '/rss') === 0) {
+			$tail = substr($uriPath, 4);
+			if ($tail === '') {
+				$tail = '';
+			}
+			$uriPath = '/apps/files_sharing_raw/rss' . $tail;
+		}
+
+		// Detect private URL form: /raw/u/{userId}/... or /apps/files_sharing_raw/u/{userId}/...
 		$isPrivate = false;
 		$privateUserId = null;
-		if (preg_match('#^/apps/raw/u/([^/]+)#', $uriPath, $mUser)) {
+		if (preg_match('#^/apps/files_sharing_raw/u/([^/]+)#', $uriPath, $mUser)) {
 			$isPrivate = true;
 			$privateUserId = $mUser[1];
 		}
 
-		// 1) Token extraction: support both /apps/raw/s/{token} and /apps/raw/{token}
+		// 1) Token extraction: support both /apps/files_sharing_raw/s/{token} and /apps/files_sharing_raw/{token}
 		$token = null;
-		if (!$isPrivate && preg_match('#^/apps/raw(?:/s)?/([^/]+)#', $uriPath, $m)) {
+		if (!$isPrivate && preg_match('#^/apps/files_sharing_raw(?:/s)?/([^/]+)#', $uriPath, $m)) {
 			$token = $m[1];
-			// exact token match has highest priority
+
+			// exact token match from config has highest priority
 			if (isset($tokens[$token])) {
 				return $this->buildCspFromPolicy($tokens[$token]);
+			}
+
+			// DB CSP override (additive): only if the share is raw-enabled.
+			// Best-effort and never throw from CSP logic.
+			try {
+				$share = $this->shareManager->getShareByToken($token);
+				if ($share->getShareType() === Share::SHARE_TYPE_LINK) {
+					$shareId = (int)$share->getId();
+					if ($shareId > 0 && $this->rawRegistry->isEnabled($shareId)) {
+						$dbCsp = $this->rawRegistry->getCsp($shareId);
+						if ($dbCsp !== null && trim($dbCsp) !== '') {
+							return $this->sanitizeCspString($dbCsp);
+						}
+					}
+				}
+			} catch (\Throwable $e) {
+				// ignore
 			}
 		}
 
 		// Compute path after optional token for relative matching
 		if ($isPrivate && $privateUserId !== null) {
-			$afterTokenPath = preg_replace('#^/apps/raw/u/' . preg_quote($privateUserId, '#') . '#', '', $uriPath);
+			$afterTokenPath = preg_replace('#^/apps/files_sharing_raw/u/' . preg_quote($privateUserId, '#') . '#', '', $uriPath);
 		} elseif ($token !== null) {
-			$afterTokenPath = preg_replace('#^/apps/raw(?:/s)?/' . preg_quote($token, '#') . '#', '', $uriPath);
+			$afterTokenPath = preg_replace('#^/apps/files_sharing_raw(?:/s)?/' . preg_quote($token, '#') . '#', '', $uriPath);
 		} else {
-			$afterTokenPath = preg_replace('#^/apps/raw#', '', $uriPath);
+			$afterTokenPath = preg_replace('#^/apps/files_sharing_raw#', '', $uriPath);
 		}
 		if ($afterTokenPath === '') { $afterTokenPath = '/'; }
 
-		// 2) path-prefix matching: supports absolute prefixes (start with /apps/raw) and relative prefixes (match against $afterTokenPath)
+		// 2) path-prefix matching: supports absolute prefixes (start with /apps/files_sharing_raw) and relative prefixes (match against $afterTokenPath)
 		$bestPrefix = null;
 		$bestIsRelative = false;
 		foreach ($prefixes as $prefix => $policy) {
@@ -106,7 +148,7 @@ class CspManager {
 			if ($prefix === '') { continue; }
 
 			// absolute prefix: compare against full URI path
-			if (strpos($prefix, '/apps/raw') === 0) {
+			if (strpos($prefix, '/apps/files_sharing_raw') === 0) {
 				if (strpos($uriPath, $prefix) === 0) {
 					if ($bestPrefix === null || strlen($prefix) > strlen($bestPrefix)) {
 						$bestPrefix = $prefix;

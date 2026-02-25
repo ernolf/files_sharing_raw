@@ -1,40 +1,95 @@
 <?php
-namespace OCA\Raw\AppInfo;
+/**
+ * SPDX-FileCopyrightText: 2024-2026 [ernolf] Raphael Gradenwitz
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+namespace OCA\FilesSharingRaw\AppInfo;
 
-use OCA\Raw\Controller\PrivatePageController;
-use OCA\Raw\Controller\PubPageController;
-use OCA\Raw\Service\CspManager;
+use OCA\Files\Event\LoadAdditionalScriptsEvent;
+use OCA\FilesSharingRaw\Controller\PrivatePageController;
+use OCA\FilesSharingRaw\Controller\PubPageController;
+use OCA\FilesSharingRaw\Controller\RawShareApiController;
+use OCA\FilesSharingRaw\Db\RawShareMapper;
+use OCA\FilesSharingRaw\Listener\FilesLoadAdditionalScriptsListener;
+use OCA\FilesSharingRaw\Listener\ShareDeletedListener;
+use OCA\FilesSharingRaw\Listener\ShareUpdatedListener;
+use OCA\FilesSharingRaw\Service\CspManager;
+use OCA\FilesSharingRaw\Service\PublicUrlBuilder;
+use OCA\FilesSharingRaw\Service\RawShareRegistry;
 use OCP\AppFramework\App;
+use OCP\AppFramework\Bootstrap\IBootContext;
+use OCP\AppFramework\Bootstrap\IBootstrap;
+use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\IConfig;
 use OCP\IContainer;
 use OCP\IRequest;
+use OCP\IURLGenerator;
 use OCP\IUserSession;
 use OCP\Files\IRootFolder;
+use OCP\Share\Events\ShareDeletedEvent;
+use OCP\Share\Events\ShareUpdatedEvent;
 use OCP\Share\IManager;
 
-class Application extends App {
+class Application extends App implements IBootstrap {
 	/**
 	 * Application constructor
 	 *
 	 * @param array $urlParams
 	 */
 	public function __construct(array $urlParams = []) {
-		parent::__construct('raw', $urlParams);
+		parent::__construct('files_sharing_raw', $urlParams);
 		$container = $this->getContainer();
 
 		$this->registerServices($container);
 		$this->registerControllers($container);
 	}
 
+	public function register(IRegistrationContext $context): void {
+		// Files sidebar integration
+		$context->registerEventListener(LoadAdditionalScriptsEvent::class, FilesLoadAdditionalScriptsListener::class);
+
+		// Cleanup / consistency
+		$context->registerEventListener(ShareDeletedEvent::class, ShareDeletedListener::class);
+		$context->registerEventListener(ShareUpdatedEvent::class, ShareUpdatedListener::class);
+	}
+
+	public function boot(IBootContext $context): void {
+	}
+
 	/**
 	 * Register shared services used by the app.
 	 */
 	protected function registerServices(IContainer $c) {
-		// Register CspManager as a shared service that uses OCP\IConfig
+		$c->registerService('RawShareMapper', function($container) {
+			/** @var \OCP\IDBConnection $db */
+			$db = $container->query('OCP\IDBConnection');
+			return new RawShareMapper($db);
+		});
+
+		$c->registerService('RawShareRegistry', function($container) {
+			/** @var RawShareMapper $mapper */
+			$mapper = $container->query('RawShareMapper');
+			/** @var \OCP\AppFramework\Utility\ITimeFactory $time */
+			$time = $container->query('OCP\AppFramework\Utility\ITimeFactory');
+			return new RawShareRegistry($mapper, $time);
+		});
+
 		$c->registerService('CspManager', function($container) {
 			/** @var IConfig $config */
 			$config = $container->query('OCP\IConfig');
-			return new CspManager($config);
+			/** @var IManager $shareManager */
+			$shareManager = $container->query('OCP\Share\IManager');
+			/** @var RawShareRegistry $registry */
+			$registry = $container->query('RawShareRegistry');
+			return new CspManager($config, $shareManager, $registry);
+		});
+
+		$c->registerService('PublicUrlBuilder', function($container) {
+			/** @var IConfig $config */
+			$config = $container->query('OCP\IConfig');
+			/** @var IURLGenerator $url */
+			$url = $container->query('OCP\IURLGenerator');
+			return new PublicUrlBuilder($config, $url);
 		});
 	}
 
@@ -52,8 +107,12 @@ class Application extends App {
 			$config = $container->query('OCP\IConfig');
 			/** @var CspManager $cspManager */
 			$cspManager = $container->query('CspManager');
+			/** @var PublicUrlBuilder $publicUrlBuilder */
+			$publicUrlBuilder = $container->query('PublicUrlBuilder');
+			/** @var RawShareRegistry $registry */
+			$registry = $container->query('RawShareRegistry');
 
-			return new PubPageController($appName, $request, $shareManager, $config, $cspManager);
+			return new PubPageController($appName, $request, $shareManager, $config, $cspManager, $publicUrlBuilder, $registry);
 		});
 
 		$c->registerService('PrivatePageController', function($container) {
@@ -70,6 +129,24 @@ class Application extends App {
 			$userSession = $container->query('OCP\IUserSession');
 
 			return new PrivatePageController($appName, $request, $rootFolder, $cspManager, $config, $userSession);
+		});
+
+		$c->registerService('RawShareApiController', function($container) {
+			$appName = $container->getAppName();
+			/** @var IRequest $request */
+			$request = $container->query('Request');
+			/** @var IManager $shareManager */
+			$shareManager = $container->query('OCP\Share\IManager');
+			/** @var IUserSession $userSession */
+			$userSession = $container->query('OCP\IUserSession');
+			/** @var RawShareRegistry $registry */
+			$registry = $container->query('RawShareRegistry');
+			/** @var PublicUrlBuilder $publicUrlBuilder */
+			$publicUrlBuilder = $container->query('PublicUrlBuilder');
+			/** @var IRootFolder $rootFolder */
+			$rootFolder = $container->query('OCP\Files\IRootFolder');
+
+			return new RawShareApiController($appName, $request, $shareManager, $userSession, $registry, $publicUrlBuilder, $rootFolder);
 		});
 	}
 }

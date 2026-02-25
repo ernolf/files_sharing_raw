@@ -1,7 +1,14 @@
 <?php
-namespace OCA\Raw\Controller;
+/**
+ * SPDX-FileCopyrightText: 2024-2026 [ernolf] Raphael Gradenwitz
+ * SPDX-FileCopyrightText: 2018-2019 Gerben
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+namespace OCA\FilesSharingRaw\Controller;
 
-use OCA\Raw\Service\CspManager;
+use OCA\FilesSharingRaw\Service\CspManager;
+use OCA\FilesSharingRaw\Service\PublicUrlBuilder;
+use OCA\FilesSharingRaw\Service\RawShareRegistry;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
@@ -9,6 +16,7 @@ use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\Files\NotFoundException;
 use OCP\IConfig;
 use OCP\IRequest;
+use OCP\Share;
 use OCP\Share\IManager;
 
 class PubPageController extends Controller {
@@ -18,8 +26,12 @@ class PubPageController extends Controller {
 	private $shareManager;
 	/** @var IConfig */
 	private $config;
+	/** @var PublicUrlBuilder */
+	private $publicUrlBuilder;
 	/** @var CspManager */
 	protected $cspManager;
+	/** @var RawShareRegistry */
+	private $rawRegistry;
 
 	private function plainNotFound() {
 		if (session_status() === PHP_SESSION_ACTIVE) {
@@ -40,15 +52,53 @@ class PubPageController extends Controller {
 		IRequest $request,
 		IManager $shareManager,
 		IConfig $config,
-		CspManager $cspManager
+		CspManager $cspManager,
+		PublicUrlBuilder $publicUrlBuilder,
+		RawShareRegistry $rawRegistry
 	) {
 		parent::__construct($appName, $request);
 		$this->shareManager = $shareManager;
 		$this->config = $config;
 		$this->cspManager = $cspManager;
+		$this->publicUrlBuilder = $publicUrlBuilder;
+		$this->rawRegistry = $rawRegistry;
 	}
 
-	private function isAllowedToken($token) {
+	private function redirectCanonicalIfNeeded(string $token, ?string $path): void {
+		$rootUrlApps = $this->config->getSystemValue('rootUrlApps', []);
+		$hasRoot = is_array($rootUrlApps) && in_array('files_sharing_raw', $rootUrlApps, true);
+		if (!$hasRoot) {
+			return;
+		}
+
+		$method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+		if ($method !== 'GET' && $method !== 'HEAD') {
+			return;
+		}
+
+		$uri = $_SERVER['REQUEST_URI'] ?? '';
+		$reqPath = parse_url($uri, PHP_URL_PATH);
+		if ($reqPath === null || $reqPath === false) {
+			$reqPath = $uri;
+		}
+		if (strpos((string)$reqPath, '/apps/files_sharing_raw') !== 0) {
+			return;
+		}
+
+		if ($token === 'rss') {
+			$target = $this->publicUrlBuilder->rssPath((string)($path ?? ''));
+		} else {
+			$target = $this->publicUrlBuilder->rawPath($token, (string)($path ?? ''));
+		}
+		$qs = parse_url($uri, PHP_URL_QUERY);
+		if (is_string($qs) && $qs !== '') {
+			$target .= '?' . $qs;
+		}
+		header('Location: ' . $target, true, 301);
+		exit;
+	}
+
+	private function isAllowedByConfig(string $token): bool {
 		// Load allowed tokens and wildcards from config
 		$allowedTokens = $this->config->getSystemValue('allowed_raw_tokens', []);
 		$allowedWildcards = $this->config->getSystemValue('allowed_raw_token_wildcards', []);
@@ -71,16 +121,28 @@ class PubPageController extends Controller {
 		return false;
 	}
 
+	private function isAllowedShare(\OCP\Share\IShare $share, string $token): bool {
+		// Config ALWAYS has top priority (tokens + wildcards).
+		if ($this->isAllowedByConfig($token)) {
+			return true;
+		}
+		// DB is additive only (UI checkbox creates the DB entry).
+		return $this->rawRegistry->isEnabled((int)$share->getId());
+	}
+
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	#[PublicPage]
 	public function getByToken($token) {
-		if (!$this->isAllowedToken($token)) {
-			$this->plainNotFound();
-		}
-
 		try {
 			$share = $this->shareManager->getShareByToken($token);
+			if ($share->getShareType() !== Share::SHARE_TYPE_LINK) {
+				$this->plainNotFound();
+			}
+			if (!$this->isAllowedShare($share, (string)$token)) {
+				$this->plainNotFound();
+			}
+			$this->redirectCanonicalIfNeeded((string)$token, null);
 			$node = $share->getNode();
 		} catch (\Throwable $e) {
 			$this->plainNotFound();
@@ -115,18 +177,22 @@ class PubPageController extends Controller {
 	#[NoCSRFRequired]
 	#[PublicPage]
 	public function getByTokenAndPath($token, $path) {
-		if (!$this->isAllowedToken($token)) {
-			$this->plainNotFound();
-		}
-
 		try {
 			$share = $this->shareManager->getShareByToken($token);
+			if ($share->getShareType() !== Share::SHARE_TYPE_LINK) {
+				$this->plainNotFound();
+			}
+			if (!$this->isAllowedShare($share, (string)$token)) {
+				$this->plainNotFound();
+			}
+			$this->redirectCanonicalIfNeeded((string)$token, (string)$path);
 			$dirNode = $share->getNode();
 		} catch (\Throwable $e) {
 			$this->plainNotFound();
 		}
 		if ($dirNode->getType() !== 'dir') {
-			throw new \Exception("Received a sub-path for a share that is not a directory");
+			// Do not leak details; behave like a plain raw miss.
+			$this->plainNotFound();
 		}
 		try {
 			$fileNode = $dirNode->get($path);

@@ -1,7 +1,12 @@
 <?php
-namespace OCA\Raw\Controller;
+/**
+ * SPDX-FileCopyrightText: 2024-2026 [ernolf] Raphael Gradenwitz
+ * SPDX-FileCopyrightText: 2018-2019 Gerben
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+namespace OCA\FilesSharingRaw\Controller;
 
-use OCA\Raw\Service\CspManager;
+use OCA\FilesSharingRaw\Service\CspManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;

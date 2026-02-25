@@ -1,0 +1,24 @@
+{
+	"name": "files_sharing_raw",
+	"private": true,
+	"scripts": {
+		"build": "webpack --node-env production --progress",
+		"dev": "webpack --node-env development --progress",
+		"watch": "webpack --node-env development --progress --watch"
+	},
+	"devDependencies": {
+		"@nextcloud/webpack-vue-config": "^7.0.2",
+		"webpack": "^5.105.2",
+		"webpack-cli": "^6.0.1"
+	},
+	"dependencies": {
+		"@nextcloud/axios": "^2.5.2",
+		"@nextcloud/dialogs": "^7.3.0",
+		"@nextcloud/l10n": "^3.4.1",
+		"@nextcloud/router": "^3.1.0",
+		"@nextcloud/sharing": "^0.4.0",
+		"@nextcloud/vue": "^9.5.0",
+		"vue": "^3.5.28",
+		"vue-material-design-icons": "^5.3.1"
+	}
+}

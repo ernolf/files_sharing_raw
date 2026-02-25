@@ -1,7 +1,12 @@
 <?php
-namespace OCA\Raw\Controller;
+/**
+ * SPDX-FileCopyrightText: 2024-2026 [ernolf] Raphael Gradenwitz
+ * SPDX-FileCopyrightText: 2018-2019 Gerben
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+namespace OCA\FilesSharingRaw\Controller;
 
-use OCA\Raw\Service\CspManager;
+use OCA\FilesSharingRaw\Service\CspManager;
 use OCP\AppFramework\Http\NotFoundResponse;
 use OCP\Files\NotFoundException;
 use OCP\IConfig;
@@ -45,7 +50,9 @@ trait RawResponse {
 	}
 
 	/**
-	 * Detect whether this raw request is the private URL form: /apps/raw/u/{userId}/...
+	 * Detect whether this raw request is the private URL form.
+	 * Matches: /raw/u/{userId}/... (root alias, canonical),
+	 *          /apps/files_sharing_raw/u/{userId}/...
 	 */
 	protected function isPrivateRawRequest(): bool {
 		$uri = $_SERVER['REQUEST_URI'] ?? '';
@@ -53,7 +60,7 @@ trait RawResponse {
 		if ($path === null || $path === false) {
 			$path = $uri;
 		}
-		return (bool)preg_match('#^/apps/raw/u/#', (string)$path);
+		return (bool)preg_match('#^(/raw|/apps/files_sharing_raw)/u/#', (string)$path);
 	}
 
 	/**
