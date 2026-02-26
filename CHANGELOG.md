@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.5.0
+
+### Breaking Changes
+- **App renamed** from `raw` to `files_sharing_raw`; PHP namespace from `OCA\Raw` to `OCA\FilesSharingRaw`. All routes are now exclusively available under the `/raw/` root alias (requires `files_sharing_raw` entry in Nextcloud core `RouteParser.php`). Config keys (`raw_*`) are **unchanged**.
+- Routes without root alias removed: `/apps/raw/s/{token}`, `/apps/raw/{token}`, `/apps/raw/{token}/{path}`, `/apps/raw/u/{userId}/{path}`. Private access now requires `/raw/u/{userId}/{path}`
+
+### Added
+- **UI-based raw share management** (Files sidebar integration):
+  - "Enable raw link" toggle in the share's Advanced settings panel.
+  - REST API: `GET/POST /api/v1/raw-share/{shareId}`, `GET /api/v1/raw-shares/{fileId}`, `GET /api/v1/raw-public-url`
+  - DB table `raw_shares`: stores per-share enabled state and optional
+    custom CSP override per share.
+  - `ShareDeletedListener`: auto-purges DB entry on share deletion.
+  - `ShareUpdatedListener`: handles token rotation and share updates.
+  - `FilesLoadAdditionalScriptsListener`: injects sidebar JS bundle into
+    the Files app.
+- **DB-based share authorization** (additive to config allowlist):
+  - Config (`allowed_raw_tokens`, `allowed_raw_token_wildcards`) retains highest priority.
+  - UI toggle creates a DB row that additively allows the share.
+- **Canonical URL redirect**: when `files_sharing_raw` is in `rootUrlApps`, requests to `/apps/files_sharing_raw/{token}/...` are 301-redirected to canonical `/raw/{token}/...`
+- **`PublicUrlBuilder`** service + `PublicUrlController` (`/api/v1/raw-public-url`) for generating canonical raw URLs.
+- **Per-share DB CSP override**: `CspManager` reads a custom CSP string from the DB for raw-enabled shares (priority: config token > DB CSP > path/extension/mimetype rules).
+- **`IBootstrap`** interface implemented; event listeners registered via `register()` (modern Nextcloud pattern).
+- **SPDX copyright/license headers** added to all source files.
+
+### Changed
+- Requirement bump: PHP min-version 8.0 → 8.1, Nextcloud min-version 26 → 31.
+- `CspManager`: all URL forms (`/raw/...`, `/rss/...`) normalized to `/apps/files_sharing_raw/...` before CSP matching rules are applied.
+- `PubPageController`: share type now validated (must be `SHARE_TYPE_LINK`); non-directory shares accessed with a sub-path return plain 404 instead of throwing an exception.
+
 ## 0.4.1
 ### Added
 - Root aliases: /raw/{token}, /raw/{token}/{path}, and /rss shortcuts (requires rootUrlApps allowlist).

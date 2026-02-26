@@ -22,7 +22,7 @@ The Content-Security-Policy (CSP) is configurable via the system config key `raw
 
 The common usage is to first share a file and enable public access through a link. In the Advanced settings of this share (in the right sidebar), the Raw link must be enabled. If the share link is `https://my-nextcloud/s/aBc123DeF456xyZ`, then this app will provide access to the raw file at `https://my-nextcloud/raw/aBc123DeF456xyZ`.  If the share is a folder, the files within it are accessible as e.g. `https://my-nextcloud/raw/aBc123DeF456xyZ/path/to/file`.
 
-A user can also access their own private files. For example, a file named `test.html` in anansi's Documents folder would be available at `https://my-nextcloud/apps/raw/u/anansi/Documents/test.html`.
+A user can also access their own private files. For example, a file named `test.html` in anansi's Documents folder would be available at `https://my-nextcloud/raw/u/anansi/Documents/test.html`.
 
 Tokens must be explicitly allowed for raw access. This can be done either via the UI in the share's advanced settings, or by whitelisting them in the config.php file.
 
