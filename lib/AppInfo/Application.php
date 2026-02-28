@@ -13,6 +13,7 @@ use OCA\FilesSharingRaw\Db\RawShareMapper;
 use OCA\FilesSharingRaw\Listener\FilesLoadAdditionalScriptsListener;
 use OCA\FilesSharingRaw\Listener\ShareDeletedListener;
 use OCA\FilesSharingRaw\Listener\ShareUpdatedListener;
+use OCA\FilesSharingRaw\Middleware\ShareRawOnlyMiddleware;
 use OCA\FilesSharingRaw\Service\CspManager;
 use OCA\FilesSharingRaw\Service\PublicUrlBuilder;
 use OCA\FilesSharingRaw\Service\RawShareRegistry;
@@ -52,6 +53,9 @@ class Application extends App implements IBootstrap {
 		// Cleanup / consistency
 		$context->registerEventListener(ShareDeletedEvent::class, ShareDeletedListener::class);
 		$context->registerEventListener(ShareUpdatedEvent::class, ShareUpdatedListener::class);
+
+		// Global middleware: block /s/{token} when raw_only is set
+		$context->registerMiddleware(ShareRawOnlyMiddleware::class, true);
 	}
 
 	public function boot(IBootContext $context): void {
@@ -61,6 +65,16 @@ class Application extends App implements IBootstrap {
 	 * Register shared services used by the app.
 	 */
 	protected function registerServices(IContainer $c) {
+		$c->registerService(ShareRawOnlyMiddleware::class, function($container) {
+			/** @var IRequest $request */
+			$request = $container->query('Request');
+			/** @var RawShareMapper $mapper */
+			$mapper = $container->query('RawShareMapper');
+			/** @var IConfig $config */
+			$config = $container->query('OCP\IConfig');
+			return new ShareRawOnlyMiddleware($request, $mapper, $config);
+		});
+
 		$c->registerService('RawShareMapper', function($container) {
 			/** @var \OCP\IDBConnection $db */
 			$db = $container->query('OCP\IDBConnection');
@@ -153,4 +167,3 @@ class Application extends App implements IBootstrap {
 		});
 	}
 }
-

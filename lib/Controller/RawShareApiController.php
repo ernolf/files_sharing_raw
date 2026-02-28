@@ -50,11 +50,13 @@ class RawShareApiController extends Controller {
 		$token = (string)$share->getToken();
 		$enabled = $this->registry->isEnabled($shareId);
 		$csp = $this->registry->getCsp($shareId);
+		$rawOnly = $enabled ? $this->registry->isRawOnly($shareId) : false;
 
 		return new DataResponse([
 			'shareId' => $shareId,
 			'enabled' => $enabled,
 			'csp' => $csp,
+			'rawOnly' => $rawOnly,
 			'token' => $token,
 			'rawUrl' => $this->urlBuilder->publicTokenUrl($token),
 		]);
@@ -68,13 +70,14 @@ class RawShareApiController extends Controller {
 		}
 
 		$enabled = $this->toBool($this->request->getParam('enabled', false));
+		$rawOnly = $this->toBool($this->request->getParam('rawOnly', false));
 		$csp = $this->request->getParam('csp', null);
 		if ($csp !== null && !is_string($csp)) {
 			$csp = null;
 		}
 
 		if ($enabled) {
-			$this->registry->enable($shareId, $csp);
+			$this->registry->enable($shareId, $csp, $rawOnly);
 		} else {
 			$this->registry->disable($shareId);
 		}
@@ -85,6 +88,7 @@ class RawShareApiController extends Controller {
 			'shareId' => $shareId,
 			'enabled' => $enabled,
 			'csp' => $enabled ? $this->registry->getCsp($shareId) : null,
+			'rawOnly' => $enabled ? $this->registry->isRawOnly($shareId) : false,
 			'token' => $token,
 			'rawUrl' => $this->urlBuilder->publicTokenUrl($token),
 		]);
@@ -216,4 +220,3 @@ class RawShareApiController extends Controller {
 		return $n > 0 ? $n : 0;
 	}
 }
-
