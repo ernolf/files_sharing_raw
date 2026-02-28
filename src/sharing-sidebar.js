@@ -6,7 +6,7 @@
 
 import { registerSidebarAction } from '@nextcloud/sharing/ui'
 import { createApp, h, reactive } from 'vue'
-import RawSharingAction from './components/RawSharingAction.ce.vue'
+import RawSharingAction from './components/RawSharingAction.vue'
 
 const ELEMENT_NAME = 'oca_files_sharing_raw-sharing_action'
 
