@@ -15,7 +15,6 @@ use OCP\IRequest;
 use OCP\IUserSession;
 use OCP\Share\IManager;
 use OCP\Share\IShare;
-use OCP\Share;
 
 class RawShareApiController extends Controller {
 	private IManager $shareManager;
@@ -115,7 +114,7 @@ class RawShareApiController extends Controller {
 
 		// Get public link shares for this node (best-effort, never throw).
 		try {
-			$shares = $this->shareManager->getSharesBy($uid, Share::SHARE_TYPE_LINK, $node, true, 200, 0);
+			$shares = $this->shareManager->getSharesBy($uid, IShare::TYPE_LINK, $node, true, 200, 0);
 		} catch (\Throwable $e) {
 			$shares = [];
 		}
@@ -123,7 +122,7 @@ class RawShareApiController extends Controller {
 		$out = [];
 		foreach ($shares as $share) {
 			try {
-				if ($share->getShareType() !== Share::SHARE_TYPE_LINK) {
+				if ($share->getShareType() !== IShare::TYPE_LINK) {
 					continue;
 				}
 				$shareId = $this->normalizeShareId((string)$share->getId());
@@ -175,7 +174,7 @@ class RawShareApiController extends Controller {
 			}
 		}
 
-		if ($share->getShareType() !== Share::SHARE_TYPE_LINK) {
+		if ($share->getShareType() !== IShare::TYPE_LINK) {
 			return null;
 		}
 

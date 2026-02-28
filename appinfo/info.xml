@@ -43,6 +43,6 @@ Tokens must be explicitly allowed for raw access. This can be done either via th
     <bugs>https://github.com/ernolf/files_sharing_raw/issues</bugs>
     <dependencies>
         <php min-version="8.1"/>
-        <nextcloud min-version="31"/>
+        <nextcloud min-version="32"/>
     </dependencies>
 </info>

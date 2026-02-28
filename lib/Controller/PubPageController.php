@@ -16,8 +16,8 @@ use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\Files\NotFoundException;
 use OCP\IConfig;
 use OCP\IRequest;
-use OCP\Share;
 use OCP\Share\IManager;
+use OCP\Share\IShare;
 
 class PubPageController extends Controller {
 	use RawResponse;
@@ -65,9 +65,7 @@ class PubPageController extends Controller {
 	}
 
 	private function redirectCanonicalIfNeeded(string $token, ?string $path): void {
-		$rootUrlApps = $this->config->getSystemValue('rootUrlApps', []);
-		$hasRoot = is_array($rootUrlApps) && in_array('files_sharing_raw', $rootUrlApps, true);
-		if (!$hasRoot) {
+		if (!$this->publicUrlBuilder->hasRootAliases()) {
 			return;
 		}
 
@@ -136,7 +134,7 @@ class PubPageController extends Controller {
 	public function getByToken($token) {
 		try {
 			$share = $this->shareManager->getShareByToken($token);
-			if ($share->getShareType() !== Share::SHARE_TYPE_LINK) {
+			if ($share->getShareType() !== IShare::TYPE_LINK) {
 				$this->plainNotFound();
 			}
 			if (!$this->isAllowedShare($share, (string)$token)) {
@@ -179,7 +177,7 @@ class PubPageController extends Controller {
 	public function getByTokenAndPath($token, $path) {
 		try {
 			$share = $this->shareManager->getShareByToken($token);
-			if ($share->getShareType() !== Share::SHARE_TYPE_LINK) {
+			if ($share->getShareType() !== IShare::TYPE_LINK) {
 				$this->plainNotFound();
 			}
 			if (!$this->isAllowedShare($share, (string)$token)) {

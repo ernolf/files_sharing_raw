@@ -6,8 +6,8 @@
 namespace OCA\FilesSharingRaw\Service;
 
 use OCP\IConfig;
-use OCP\Share;
 use OCP\Share\IManager;
+use OCP\Share\IShare;
 
 class CspManager {
 
@@ -116,7 +116,7 @@ class CspManager {
 			// Best-effort and never throw from CSP logic.
 			try {
 				$share = $this->shareManager->getShareByToken($token);
-				if ($share->getShareType() === Share::SHARE_TYPE_LINK) {
+				if ($share->getShareType() === IShare::TYPE_LINK) {
 					$shareId = (int)$share->getId();
 					if ($shareId > 0 && $this->rawRegistry->isEnabled($shareId)) {
 						$dbCsp = $this->rawRegistry->getCsp($shareId);

@@ -9,7 +9,7 @@ use OCA\FilesSharingRaw\Service\RawShareRegistry;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\Share\Events\ShareUpdatedEvent;
-use OCP\Share;
+use OCP\Share\IShare;
 
 class ShareUpdatedListener implements IEventListener {
 	private RawShareRegistry $registry;
@@ -29,7 +29,7 @@ class ShareUpdatedListener implements IEventListener {
 		}
 
 		// If it stops being a public link, ensure the raw entry is gone.
-		if ($share->getShareType() !== Share::SHARE_TYPE_LINK) {
+		if ($share->getShareType() !== IShare::TYPE_LINK) {
 			// Not a link share anymore -> remove row.
 			$this->registry->purge($shareId);
 		}
