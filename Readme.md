@@ -14,7 +14,7 @@
 * **MIME sniffing**: When content-based detection is needed, only a small prefix (currently 32 KiB) is sniffed, not the full file.
 * **Streaming by default**: for normal `GET` (`200`) responses, the body is streamed whenever possible instead of loading the entire file into memory.
 
-*) For security and privacy the content is served with a [Content-Security-Policy][] (CSP) header. You can configure CSP rules in detail via Nextcloud's system [`config/{raw.}config.php`](#keep-raw-settings-in-a-dedicated-config-file) key `raw_csp`. See [Content Security Policy (raw_csp)](#content-security-policy-raw_csp) below.
+*) For security and privacy the content is served with a [Content-Security-Policy][] (CSP) header. You can configure CSP rules in detail via Nextcloud's system [`config/{raw.}config.php`](#keep-raw-settings-in-a-dedicated-config-file) key `raw_csp`. See [Content Security Policy](#content-security-policy) below.
 
 ---
 
@@ -28,36 +28,47 @@
   * [Private user files](#private-user-files)
   * [Root aliases (`/raw` and `/rss`)](#root-aliases-raw-and-rss)
 
-* [Access control](#access-control)
+* [Enabling raw access](#enabling-raw-access)
 
-  * [Method 1: UI sidebar toggle](#method-1-ui-sidebar-toggle-recommended)
-  * [Method 2: config allowlist](#method-2-config-allowlist)
+  * [Via the Files sidebar](#via-the-files-sidebar)
+  * [Via config: `allowed_raw_tokens` and wildcards](#via-config-allowed_raw_tokens-and-wildcards)
 
     * [`allowed_raw_tokens`](#allowed_raw_tokens)
     * [`allowed_raw_token_wildcards`](#allowed_raw_token_wildcards)
 
-* [Content Security Policy (raw_csp)](#content-security-policy-raw_csp)
+  * [Usage with human-readable tokens](#usage-with-human-readable-tokens)
+
+* [Raw-only mode](#raw-only-mode)
+
+  * [Via the Files sidebar](#via-the-files-sidebar-1)
+  * [`raw_only_tokens`](#raw_only_tokens)
+  * [`raw_only_token_wildcards`](#raw_only_token_wildcards)
+
+* [Content Security Policy](#content-security-policy)
 
   * [Matching priority](#matching-priority)
-  * [Policy formats accepted](#policy-formats-accepted)
-  * [Allowed directives](#allowed-directives)
-  * [Example PHP `config/{raw.}config.php` snippets](#example-php-configrawconfigphp-snippets)
-  * [Testing](#testing)
+  * [Per-share CSP (Files sidebar)](#per-share-csp-files-sidebar)
+  * [Config-based CSP (`raw_csp`)](#config-based-csp-raw_csp)
 
-* [Optional system-level tuning](#optional-system-level-tuning)
+    * [Policy formats accepted](#policy-formats-accepted)
+    * [Allowed directives](#allowed-directives)
+    * [Config examples](#config-examples)
+    * [Testing](#testing)
+
+* [Performance & caching](#performance--caching)
 
   * [Cache-Control](#cache-control)
   * [Webserver offload](#webserver-offload)
 
     * [Offload debug header](#offload-debug-header)
 
-* [HTTP behavior & performance](#http-behavior--performance)
+  * [HTTP behavior](#http-behavior)
 
-  * [Cookie-free responses](#cookie-free-responses)
-  * [Caching: ETags and Last-Modified](#caching-etags-and-last-modified)
-  * [Directory handling (`index.html`)](#directory-handling-indexhtml)
-  * [HEAD requests](#head-requests)
-  * [Plain 404 for invalid public shares](#plain-404-for-invalid-public-shares)
+    * [Cookie-free responses](#cookie-free-responses)
+    * [ETags and Last-Modified](#etags-and-last-modified)
+    * [Directory handling (`index.html`)](#directory-handling-indexhtml)
+    * [HEAD requests](#head-requests)
+    * [Plain 404 for invalid public shares](#plain-404-for-invalid-public-shares)
 
 * [Notes & best practices](#notes--best-practices)
 
@@ -77,7 +88,7 @@
    * `https://my-nextcloud/raw/<token>`
    * and for folders: `https://my-nextcloud/raw/<token>/<path/to/file>`
 
-5. (Optional) Alternatively or additionally, allowlist tokens in [`config/{raw.}config.php`](#method-2-config-allowlist) — useful for automation or custom link names.
+5. (Optional) Alternatively or additionally, allowlist tokens in [`config/{raw.}config.php`](#via-config-allowed_raw_tokens-and-wildcards) — useful for automation or custom link names.
 6. (Optional) Configure CSP policies via `raw_csp`.
 
 > [!IMPORTANT]
@@ -139,22 +150,24 @@ Special namespace shortcut:
 
 ---
 
-## Access control
+## Enabling raw access
 
 Public raw access is **opt-in**: a token must be explicitly allowed before the app will serve it. There are two ways to allow tokens — they can be combined freely, and the config allowlist always takes priority.
 
-### Method 1: UI sidebar toggle (recommended)
+### Via the Files sidebar
 
 Open the share in the Files app (right sidebar → Advanced settings). Enable the **"Enable raw link"** toggle and click **Update share**. The share is immediately raw-accessible under `/raw/{token}`.
 
-This toggle stores the enabled state (and an optional custom CSP) per share in the database. The DB entry is automatically removed when the share is deleted.
+This toggle stores the enabled state per share in the database. The DB entry is automatically removed when the share is deleted.
 
-> [!NOTE]
-> Per-share CSP overrides can also be stored this way (future UI; currently possible via the REST API directly).
+Once the raw link is enabled, additional options become available via the **three-dot menu (⋯)** next to the raw link row:
 
-### Method 2: config allowlist
+* **Raw only** — see [Raw-only mode](#raw-only-mode).
+* **Edit CSP** — see [Per-share CSP (Files sidebar)](#per-share-csp-files-sidebar).
 
-One or both of the following arrays in [`config/{raw.}config.php`](#keep-raw-settings-in-a-dedicated-config-file) can be defined to configure token-based allowlist restrictions. **Config always takes priority over the DB registry.**
+### Via config: `allowed_raw_tokens` and wildcards
+
+One or both of the following arrays in [`config/{raw.}config.php`](#keep-raw-settings-in-a-dedicated-config-file) can be defined. **Config always takes priority over the DB registry.**
 
 #### `allowed_raw_tokens`
 
@@ -207,12 +220,71 @@ For example: instead of a random token like `aBc123DeF456xyZ`, use a meaningful 
 
 ---
 
-## Content Security Policy (raw_csp)
+## Raw-only mode
 
-`files_sharing_raw` supports configurable Content-Security-Policy (CSP) rules via the Nextcloud system config key `raw_csp`. The CSP config lets admins tune how the app serves files from different paths, file extensions, or MIME types — and optionally per share token.
+When a share is flagged as **raw-only**, Nextcloud's standard share page (`/s/<token>`) returns **404 Not Found**. The file (or folder) is then only accessible via the raw URL (`/raw/<token>[/<path>]`).
+
+This is particularly useful for **shared folders**: without raw-only, anyone who has the share link can open the folder in Nextcloud's browser UI, navigate the directory tree, and discover all contained files. Enabling raw-only prevents any folder browsing entirely — only direct requests to known, explicit file paths via `/raw/` will succeed.
+
+> [!IMPORTANT]
+> Raw-only does **not** grant `/raw/` access on its own. The token must also be enabled for raw serving — either via the **"Enable raw link"** UI toggle or listed in `allowed_raw_tokens` / `allowed_raw_token_wildcards`. Raw-only only controls whether the standard `/s/<token>` share page is additionally blocked.
+
+### Via the Files sidebar
+
+In the Files sidebar, once **"Enable raw link"** is active for a share, open the **three-dot menu (⋯)** in the raw link row and tick **"Raw only"**. From that moment on, `/s/<token>` returns 404 for that share — the file or folder is only reachable via `/raw/<token>`.
+
+### `raw_only_tokens`
+
+An array of tokens for which the standard Nextcloud share page (`/s/<token>`) is blocked. Accepts the same format as `allowed_raw_tokens` (exact token strings).
+
+### `raw_only_token_wildcards`
+
+An array of wildcard patterns (`*`) matched against the share token. Accepts the same format and wildcard syntax as `allowed_raw_token_wildcards`.
+
+### Example configuration
+
+```php
+<?php
+$CONFIG = array (
+// -
+  // Grant /raw/ access to these tokens:
+  'allowed_raw_tokens' =>
+  array (
+    0 => 'html',
+    1 => 'platform',
+  ),
+  'allowed_raw_token_wildcards' =>
+  array (
+    0 => 'nc-*',
+  ),
+
+  // Additionally block /s/ for these tokens (raw-only):
+  'raw_only_tokens' =>
+  array (
+    0 => 'html',
+    1 => 'platform',
+  ),
+  'raw_only_token_wildcards' =>
+  array (
+    0 => 'nc-*',
+  ),
+// -
+);
+```
+
+In this configuration `html`, `platform`, and any `nc-*` token are accessible via `/raw/` but their Nextcloud share pages (`/s/html`, `/s/platform`, `/s/nc-assets`, …) all return 404.
 
 > [!NOTE]
-> If `raw_csp` is not defined, the app falls back to this safe, very restrictive CSP:
+> A token may appear in `raw_only_tokens` without being in `allowed_raw_tokens`. In that case, both `/s/<token>` and `/raw/<token>` return 404 — which is a valid but unusual setup (e.g. for tokens managed exclusively via the DB/UI toggle while still enforcing raw-only via config).
+
+---
+
+## Content Security Policy
+
+`files_sharing_raw` sends a `Content-Security-Policy` header with every raw response. Policies can be set **per share** via the Files sidebar or **globally** via the system config key `raw_csp` in `config/{raw.}config.php`. Both methods share a common evaluation order — the most specific matching rule wins.
+
+> [!NOTE]
+> If no CSP matches a request (no per-share override, no matching config rule), the app falls back to this safe, very restrictive default:
 >
 > ```
 > "sandbox; default-src 'none'; style-src data: 'unsafe-inline'; img-src data:; media-src data:; font-src data:; frame-src data:"
@@ -225,7 +297,7 @@ For example: instead of a random token like `aBc123DeF456xyZ`, use a meaningful 
 When deciding which CSP to send, the app evaluates selectors in this order:
 
 * `token` (config) — exact match for a public share token in `raw_csp['token']` (highest priority).
-* **DB CSP override** — per-share custom CSP stored via the UI or REST API (applies if the share is raw-enabled and a custom CSP is set; lower priority than config token, higher than path rules).
+* **Per-share CSP** — custom CSP stored via the UI or REST API (applies if the share is raw-enabled and a custom CSP is set; lower priority than config token, higher than path rules).
 * `path_prefix` — longest matching prefix. Supports absolute prefixes (starting with `/apps/files_sharing_raw`) and relative prefixes (matched against the path after the app prefix and token).
 * `path_contains` — substring match. Checked against both the full request path and the path after the app prefix, so public and private URLs are covered.
 * `extension` — file extension match (e.g. `html`, `json`).
@@ -233,9 +305,35 @@ When deciding which CSP to send, the app evaluates selectors in this order:
 * hard-coded fallback (if nothing matches).
 
 > [!NOTE]
-> `token` (config) is the share token that appears in public URLs. Private user paths (`/raw/u/...`) do not carry a share token — `token` and the DB CSP override cannot match on private URLs.
+> `token` (config) is the share token that appears in public URLs. Private user paths (`/raw/u/...`) do not carry a share token — `token` and per-share CSP overrides cannot match on private URLs.
 
-### Policy formats accepted
+### Per-share CSP (Files sidebar)
+
+In the **three-dot menu (⋯)** next to the raw link row, **Edit CSP** opens an inline panel for setting a per-share Content-Security-Policy override. The value is stored in the database and takes effect immediately for all subsequent raw requests to this share. Its priority in the matching chain is: below the config `token` rule, above all path/extension/mimetype rules.
+
+The panel contains a **preset dropdown** and an **editable text field**:
+
+| Preset | Stored CSP value | Suited for |
+|---|---|---|
+| Server default | *(empty — falls back to server-wide rules)* | General use; no override |
+| Sandbox (strict) | `sandbox; default-src 'none'; form-action 'none'` | Maximum isolation (no sub-resources at all) |
+| Images only | `default-src 'none'; img-src 'self' data: blob:; form-action 'none'` | Image files |
+| Documents (PDF / text) | `default-src 'none'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; form-action 'none'` | PDFs, text documents |
+| Audio / Video | `default-src 'none'; media-src 'self' data: blob:; img-src 'self' data:; form-action 'none'` | Audio / video files |
+| Custom | *(keeps current text unchanged)* | Any hand-crafted policy |
+
+Selecting a preset fills the text field with the corresponding CSP string. The presets are **starting points, not fixed values** — the text field is always freely editable. Refine or extend the preset value before hitting Save, and the modified string is what gets stored.
+
+When the text field is edited manually and its content no longer matches any preset, the dropdown automatically switches to **Custom** — a visual indicator that the stored value is user-defined.
+
+> [!NOTE]
+> Setting the per-share CSP to **"Server default"** (empty string) removes the override — the server-wide `raw_csp` rules apply as usual.
+
+### Config-based CSP (`raw_csp`)
+
+The `raw_csp` system config key lets admins define CSP rules for different paths, file extensions, MIME types, or share tokens. These rules apply globally and are evaluated after any per-share CSP override (see [matching priority](#matching-priority) above).
+
+#### Policy formats accepted
 
 A policy value for a selector may be one of:
 
@@ -243,7 +341,7 @@ A policy value for a selector may be one of:
 * *Indexed array* — list of directive strings; entries are joined with `;`.
 * *Associative array* (recommended) — `'directive' => sources`. `sources` may be a string (space separated) or an array of strings. The manager normalizes values, deduplicates and outputs a canonical single-line header.
 
-### Allowed directives
+#### Allowed directives
 
 Allowed directive names are deliberately limited (to keep policies sane and safe):
 
@@ -257,7 +355,7 @@ Allowed directive names are deliberately limited (to keep policies sane and safe
 
 Unknown/unsupported directives are ignored by the manager.
 
-### Example PHP `config/{raw.}config.php` snippets
+#### Config examples
 
 1. Extension rule — make all `.html` permissive
 
@@ -412,7 +510,7 @@ Recommendation: use '`/folder/`' when you need to match a folder segment exactly
 
 The manager checks `path_contains` against both the full request path and the path portion after the app prefix, so public and private URLs are covered.
 
-### Testing
+#### Testing
 
 After you update [`config/{raw.}config.php`](#keep-raw-settings-in-a-dedicated-config-file) (or deploy changes), test with curl:
 
@@ -434,9 +532,7 @@ Inspect the `Content-Security-Policy:` response header. If you do not get the ex
 
 ---
 
-## Optional system-level tuning
-
-This app supports optional system-level tuning via Nextcloud [`config/{raw.}config.php`](#keep-raw-settings-in-a-dedicated-config-file) system values.
+## Performance & caching
 
 ### Cache-Control
 
@@ -496,6 +592,7 @@ For large files you can optionally let the webserver send the file body (PHP ret
 > The app builds the Nginx `X-Accel-Redirect` target by stripping the resolved (`realpath`) Nextcloud `datadirectory` prefix from the local file path. Ensure your Nginx `alias` uses the same resolved datadirectory path (and includes a trailing `/`). If `datadirectory` is a symlink but Nginx points to the symlink path (or vice versa), the mapping can mismatch and offload will be skipped.
 
 Example offload configuration in [`config/{raw.}config.php`](#keep-raw-settings-in-a-dedicated-config-file) (for apache2):
+
 ```php
 <?php
 $CONFIG = array (
@@ -536,17 +633,15 @@ The response may include:
 > When offload is active and actually used, the response may include an `X-Raw-Offload` header (e.g. `apache-xsendfile` / `nginx-x-accel`) even without debug enabled.
 > If you send `X-Raw-Offload-Debug: 1`, the app adds `reason=...` and can also emit a "not offloaded" reason, which is useful to validate your config and thresholds.
 
----
+### HTTP behavior
 
-## HTTP behavior & performance
-
-### Cookie-free responses
+#### Cookie-free responses
 
 `files_sharing_raw` intentionally aims to be **cookie-free**. It will best-effort prevent `Set-Cookie` from being emitted for raw responses (e.g. by closing any active session, disabling session cookies for the remainder of the request, and removing already queued `Set-Cookie` headers).
 
 This keeps endpoints "naked" for asset serving and reduces overhead. (Best effort: a reverse proxy could still add cookies afterwards.)
 
-### Caching: ETags and Last-Modified
+#### ETags and Last-Modified
 
 `files_sharing_raw` supports conditional requests (cache validation) using ETags together with the `If-None-Match` header and also supports `Last-Modified` / `If-Modified-Since` semantics.
 
@@ -589,15 +684,15 @@ Examples:
    curl -i -H 'If-None-Match: *' 'https://your.nextcloud/raw/.../file.ext'
    ```
 
-### Directory handling (`index.html`)
+#### Directory handling (`index.html`)
 
 If the requested node is a directory, the app attempts to serve `index.html` from that directory.
 
-### HEAD requests
+#### HEAD requests
 
 `files_sharing_raw` supports `HEAD` requests (headers only, no response body).
 
-### Plain 404 for invalid public shares
+#### Plain 404 for invalid public shares
 
 For public endpoints, the app returns a minimal `text/plain` **404 Not found** response for disallowed/unknown tokens, missing shares, and missing paths. This avoids rendering large HTML error pages and keeps endpoints lightweight.
 
@@ -615,9 +710,9 @@ For public endpoints, the app returns a minimal `text/plain` **404 Not found** r
 
 ### Keep `raw` settings in a dedicated config file
 
-  * Nextcloud can load settings from multiple files in `config/`. For `files_sharing_raw`, it's recommended to keep all `raw`-related directives like `allowed_raw_tokens`, `allowed_raw_token_wildcards`, `raw_csp` etc. in a dedicated **`config/raw.config.php`** (any `*.config.php` in `config/` is loaded and merged alongside `config.php`).
-  * This keeps raw-specific security settings isolated, avoids accidental clutter in `config.php`, and plays nicely with config management.
-  * **Gotcha:** Nextcloud can consolidate config values into `config/config.php`. Don't rely on `occ` for `raw` settings if `config/raw.config.php` exists — `raw.config.php` has precedence and will override later.
+* Nextcloud can load settings from multiple files in `config/`. For `files_sharing_raw`, it's recommended to keep all `raw`-related directives like `allowed_raw_tokens`, `allowed_raw_token_wildcards`, `raw_csp` etc. in a dedicated **`config/raw.config.php`** (any `*.config.php` in `config/` is loaded and merged alongside `config.php`).
+* This keeps raw-specific security settings isolated, avoids accidental clutter in `config.php`, and plays nicely with config management.
+* **Gotcha:** Nextcloud can consolidate config values into `config/config.php`. Don't rely on `occ` for `raw` settings if `config/raw.config.php` exists — `raw.config.php` has precedence and will override later.
 
 ---
 
@@ -630,6 +725,7 @@ This app is currently not published in the Nextcloud app store.
 1. ~~Log into Nextcloud as admin.~~
 2. ~~Go to **Apps** → search for **Raw Fileserver** → Install.~~
 3. A pull request still needs to be made to add `files_sharing_raw` to `rootUrlApps`. However, until this is completed, the administrator will need to manually add the app to the `rootUrlApps` array after every update.
+
 After installation, a one-time entry for `files_sharing_raw` must be added in Nextcloud core's `lib/private/AppFramework/Routing/RouteParser.php` to activate the `/raw/` root alias.
 
 ### Manual installation (git)
