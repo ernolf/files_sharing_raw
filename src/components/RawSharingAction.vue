@@ -59,6 +59,12 @@
 									{{ t('files_sharing_raw', 'Edit CSP') }}
 								</NcActionButton>
 
+								<NcActionCheckbox
+									:model-value="rawOnly"
+									@update:model-value="onRawOnlyChange">
+									{{ t('files_sharing_raw', 'Raw only') }}
+								</NcActionCheckbox>
+
 								<NcActionSeparator />
 
 								<NcActionButton @click.prevent="disableRaw">
@@ -78,6 +84,25 @@
 						<label class="rawAction__csp-label" :for="cspInputId">
 							{{ t('files_sharing_raw', 'Custom CSP for this link') }}
 						</label>
+
+						<!-- Preset selector -->
+						<div class="rawAction__csp-preset-row">
+							<label class="rawAction__csp-preset-label">
+								{{ t('files_sharing_raw', 'Preset') }}
+							</label>
+							<select
+								class="rawAction__csp-preset"
+								:value="selectedPresetId"
+								@change="onPresetChange">
+								<option
+									v-for="p in CSP_PRESETS"
+									:key="p.id"
+									:value="p.id">
+									{{ p.label }}
+								</option>
+							</select>
+						</div>
+
 						<div class="rawAction__csp-row">
 							<NcTextField
 								:id="cspInputId"
@@ -115,6 +140,7 @@ import { t } from '@nextcloud/l10n'
 import { mdiCheck, mdiContentCopy } from '@mdi/js'
 import NcActions from '@nextcloud/vue/components/NcActions'
 import NcActionButton from '@nextcloud/vue/components/NcActionButton'
+import NcActionCheckbox from '@nextcloud/vue/components/NcActionCheckbox'
 import NcActionSeparator from '@nextcloud/vue/components/NcActionSeparator'
 import NcAvatar from '@nextcloud/vue/components/NcAvatar'
 import NcButton from '@nextcloud/vue/components/NcButton'
@@ -132,8 +158,43 @@ const props = defineProps({
 	onSave: { type: Function, required: false, default: undefined },
 })
 
+// --- CSP presets (id, label, csp value; null csp = "Custom" sentinel) ---
+const CSP_PRESETS = [
+	{
+		id: 'server_default',
+		label: t('files_sharing_raw', 'Server default'),
+		csp: '',
+	},
+	{
+		id: 'sandbox',
+		label: t('files_sharing_raw', 'Sandbox (strict)'),
+		csp: "sandbox; default-src 'none'; form-action 'none'",
+	},
+	{
+		id: 'images',
+		label: t('files_sharing_raw', 'Images only'),
+		csp: "default-src 'none'; img-src 'self' data: blob:; form-action 'none'",
+	},
+	{
+		id: 'documents',
+		label: t('files_sharing_raw', 'Documents (PDF / text)'),
+		csp: "default-src 'none'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; form-action 'none'",
+	},
+	{
+		id: 'media',
+		label: t('files_sharing_raw', 'Audio / Video'),
+		csp: "default-src 'none'; media-src 'self' data: blob:; img-src 'self' data:; form-action 'none'",
+	},
+	{
+		id: 'custom',
+		label: t('files_sharing_raw', 'Custom'),
+		csp: null,
+	},
+]
+
 // --- state ---
 const enabled = ref(false)
+const rawOnly = ref(false)
 const loadedOnce = ref(false)
 const saveRegistrar = ref(null)
 
@@ -144,6 +205,13 @@ const cspInput = ref('')
 const savingCsp = ref(false)
 
 const cspInputId = computed(() => `rawAction-csp-${shareId.value}`)
+
+// Derive the active preset id from the current cspInput value.
+const selectedPresetId = computed(() => {
+	if (cspInput.value === '') return 'server_default'
+	const match = CSP_PRESETS.find(p => p.csp !== null && p.csp === cspInput.value)
+	return match ? match.id : 'custom'
+})
 
 // --- helpers ---
 
@@ -170,6 +238,20 @@ function reqToken() {
 		|| ''
 }
 
+// Apply a CSP preset: fill the text field, leave it unchanged for "custom".
+function onPresetChange(event) {
+	const presetId = event.target.value
+	const preset = CSP_PRESETS.find(p => p.id === presetId)
+	if (!preset || preset.csp === null) return // "custom" — keep existing text
+	cspInput.value = preset.csp
+}
+
+// Toggle rawOnly and immediately persist.
+function onRawOnlyChange(val) {
+	rawOnly.value = val
+	save()
+}
+
 // --- backend calls ---
 
 async function loadStateFromBackend() {
@@ -189,11 +271,12 @@ async function loadStateFromBackend() {
 	if (!data) return
 
 	enabled.value = !!data.enabled
+	rawOnly.value = !!data.rawOnly
 	// GET already returns rawUrl and csp — no second request needed
 	rawUrl.value = data.rawUrl ?? ''
 	cspInput.value = data.csp ?? ''
 	loadedOnce.value = true
-	dbg('state loaded', { enabled: enabled.value, rawUrl: rawUrl.value, csp: cspInput.value })
+	dbg('state loaded', { enabled: enabled.value, rawOnly: rawOnly.value, rawUrl: rawUrl.value, csp: cspInput.value })
 }
 
 async function save() {
@@ -202,10 +285,11 @@ async function save() {
 		return
 	}
 	const url = OC.generateUrl('/apps/files_sharing_raw/api/v1/raw-share/' + shareId.value)
-	dbg('POST save', { shareId: shareId.value, enabled: !!enabled.value })
+	dbg('POST save', { shareId: shareId.value, enabled: enabled.value, rawOnly: rawOnly.value })
 
 	const body = new URLSearchParams()
 	body.set('enabled', enabled.value ? '1' : '0')
+	body.set('rawOnly', rawOnly.value ? '1' : '0')
 
 	const res = await fetch(url, {
 		method: 'POST',
@@ -242,6 +326,7 @@ async function saveCsp() {
 
 	const body = new URLSearchParams()
 	body.set('enabled', enabled.value ? '1' : '0')
+	body.set('rawOnly', rawOnly.value ? '1' : '0')
 	body.set('csp', cspInput.value.trim())
 
 	const res = await fetch(url, {
@@ -313,6 +398,7 @@ onMounted(() => {
 watch(shareId, () => {
 	loadedOnce.value = false
 	rawUrl.value = ''
+	rawOnly.value = false
 	loadStateFromBackend()
 })
 
@@ -394,6 +480,7 @@ watch(enabled, (val) => {
 	color: var(--color-success);
 }
 
+
 /* --- CSP editor panel --- */
 .rawAction__csp-editor {
 	/* Indent to align with the title text (avatar ~44px + 10px padding) */
@@ -409,6 +496,39 @@ watch(enabled, (val) => {
 	font-weight: 600;
 }
 
+/* --- Preset selector row --- */
+.rawAction__csp-preset-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.rawAction__csp-preset-label {
+	font-size: 0.85em;
+	color: var(--color-text-maxcontrast);
+	white-space: nowrap;
+	/* Override the global label reset above for this specific label */
+	padding-inline-start: 0 !important;
+}
+
+.rawAction__csp-preset {
+	flex: 1 1 auto;
+	padding: 6px 8px;
+	border: 1px solid var(--color-border-dark, #ccc);
+	border-radius: var(--border-radius, 3px);
+	background-color: var(--color-main-background);
+	color: var(--color-main-text);
+	font-size: 0.9em;
+	cursor: pointer;
+	min-width: 0;
+}
+
+.rawAction__csp-preset:focus {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: -1px;
+}
+
+/* --- CSP text field + save button row --- */
 .rawAction__csp-row {
 	display: flex;
 	gap: 6px;
