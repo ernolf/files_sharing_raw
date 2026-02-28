@@ -44,17 +44,39 @@ class RawShareMapper extends QBMapper {
 	}
 
 	/**
+	 * Returns true if the share identified by $token is raw-enabled and has raw_only = true.
+	 * Uses a JOIN against the NC share table to resolve token → share_id in a single query.
+	 */
+	public function isRawOnlyByToken(string $token): bool {
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('rs.raw_only')
+			->from('raw_shares', 'rs')
+			->join('rs', 'share', 's', $qb->expr()->eq('rs.share_id', 's.id'))
+			->where($qb->expr()->eq('s.token', $qb->createNamedParameter($token, IQueryBuilder::PARAM_STR)))
+			->andWhere($qb->expr()->eq('rs.enabled', $qb->createNamedParameter(1, IQueryBuilder::PARAM_INT)))
+			->andWhere($qb->expr()->eq('rs.raw_only', $qb->createNamedParameter(1, IQueryBuilder::PARAM_INT)))
+			->setMaxResults(1);
+
+		$result = $qb->executeQuery();
+		$row = $result->fetch();
+		$result->closeCursor();
+
+		return $row !== false;
+	}
+
+	/**
 	 * Upsert-like behavior:
-	 * - if exists: update enabled/csp/updated_at
+	 * - if exists: update enabled/csp/raw_only/updated_at
 	 * - else: insert new row
 	 */
-	public function upsert(int $shareId, bool $enabled, ?string $csp, int $now): RawShare {
+	public function upsert(int $shareId, bool $enabled, ?string $csp, int $now, bool $rawOnly = false): RawShare {
 		// Do NOT rely on QBMapper::insert/update here (can result in INSERT () VALUES()).
 		// Write explicitly to match DB columns (share_id, enabled, csp, created_at, updated_at).
 
 		$qb = $this->db->getQueryBuilder();
 		$qb->update($this->getTableName())
 			->set('enabled', $qb->createNamedParameter($enabled ? 1 : 0, IQueryBuilder::PARAM_INT))
+			->set('raw_only', $qb->createNamedParameter($rawOnly ? 1 : 0, IQueryBuilder::PARAM_INT))
 			->set('updated_at', $qb->createNamedParameter($now, IQueryBuilder::PARAM_INT))
 			->where($qb->expr()->eq('share_id', $qb->createNamedParameter($shareId, IQueryBuilder::PARAM_INT)));
 
@@ -78,6 +100,7 @@ class RawShareMapper extends QBMapper {
 			$values = [
 				'share_id' => $qb->createNamedParameter($shareId, IQueryBuilder::PARAM_INT),
 				'enabled' => $qb->createNamedParameter($enabled ? 1 : 0, IQueryBuilder::PARAM_INT),
+				'raw_only' => $qb->createNamedParameter($rawOnly ? 1 : 0, IQueryBuilder::PARAM_INT),
 				'created_at' => $qb->createNamedParameter($now, IQueryBuilder::PARAM_INT),
 				'updated_at' => $qb->createNamedParameter($now, IQueryBuilder::PARAM_INT),
 			];
@@ -98,4 +121,3 @@ class RawShareMapper extends QBMapper {
 		return $e;
 	}
 }
-

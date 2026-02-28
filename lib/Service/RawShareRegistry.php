@@ -38,22 +38,30 @@ class RawShareRegistry {
 		return $e->getCsp();
 	}
 
-	public function enable(int $shareId, ?string $csp): RawShare {
+	public function isRawOnly(int $shareId): bool {
+		$e = $this->mapper->findByShareIdOrNull($shareId);
+		if ($e === null) {
+			return false;
+		}
+		return $e->isEnabled() && $e->isRawOnly();
+	}
+
+	public function enable(int $shareId, ?string $csp, bool $rawOnly = false): RawShare {
 		$now = (int)$this->time->getTime();
 		$csp = $this->normalizeCsp($csp);
-		return $this->mapper->upsert($shareId, true, $csp, $now);
+		return $this->mapper->upsert($shareId, true, $csp, $now, $rawOnly);
 	}
 
 	public function disable(int $shareId): void {
 		// Do not delete the row on disable. Keep it and just mark disabled so
-		// re-enabling does not create a fresh row and CSP can be preserved.
+		// re-enabling does not create a fresh row — CSP and rawOnly are preserved.
 		$existing = $this->mapper->findByShareIdOrNull($shareId);
 		if ($existing === null) {
 			return;
 		}
 
 		$now = (int)$this->time->getTime();
-		$this->mapper->upsert($shareId, false, $existing->getCsp(), $now);
+		$this->mapper->upsert($shareId, false, $existing->getCsp(), $now, $existing->isRawOnly());
 	}
 
 	public function purge(int $shareId): void {
@@ -83,4 +91,3 @@ class RawShareRegistry {
 		return $csp === '' ? null : $csp;
 	}
 }
-

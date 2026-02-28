@@ -54,6 +54,12 @@ class Version000500Date20260216000000 extends SimpleMigrationStep {
 			'notnull' => false,
 		]);
 
+		// Must be nullable: Nextcloud does not support non-null boolean columns (Oracle).
+		$table->addColumn('raw_only', Types::BOOLEAN, [
+			'notnull' => false,
+			'default' => false,
+		]);
+
 		$table->addColumn('created_at', Types::BIGINT, [
 			'unsigned' => true,
 			'notnull' => true,

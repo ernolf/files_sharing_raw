@@ -18,6 +18,9 @@ class RawShare extends Entity {
 	/** @var string|null */
 	protected $csp = null;
 
+	/** @var bool */
+	protected $rawOnly = false;
+
 	/** @var int */
 	protected $createdAt = 0;
 
@@ -29,6 +32,7 @@ class RawShare extends Entity {
 		$this->addType('shareId', Types::BIGINT);
 		$this->addType('enabled', Types::BOOLEAN);
 		$this->addType('csp', Types::TEXT);
+		$this->addType('rawOnly', Types::BOOLEAN);
 		$this->addType('createdAt', Types::BIGINT);
 		$this->addType('updatedAt', Types::BIGINT);
 	}
@@ -71,6 +75,15 @@ class RawShare extends Entity {
 		return $this;
 	}
 
+	public function isRawOnly(): bool {
+		return (bool)$this->rawOnly;
+	}
+
+	public function setRawOnly(bool $rawOnly): self {
+		$this->setter('rawOnly', [$rawOnly]);
+		return $this;
+	}
+
 	public function getCreatedAt(): int {
 		return (int)$this->createdAt;
 	}
@@ -89,4 +102,3 @@ class RawShare extends Entity {
 		return $this;
 	}
 }
-
