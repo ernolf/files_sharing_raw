@@ -25,6 +25,7 @@ use OCP\IContainer;
 use OCP\IRequest;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
 use OCP\Files\IRootFolder;
 use OCP\Share\Events\ShareDeletedEvent;
 use OCP\Share\Events\ShareUpdatedEvent;
@@ -89,7 +90,9 @@ class Application extends App implements IBootstrap {
 			$config = $container->query('OCP\IConfig');
 			/** @var IURLGenerator $url */
 			$url = $container->query('OCP\IURLGenerator');
-			return new PublicUrlBuilder($config, $url);
+			/** @var LoggerInterface $logger */
+			$logger = $container->query(LoggerInterface::class);
+			return new PublicUrlBuilder($config, $url, $logger);
 		});
 	}
 
