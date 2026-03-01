@@ -92,7 +92,7 @@ class PubPageController extends Controller {
 		if (is_string($qs) && $qs !== '') {
 			$target .= '?' . $qs;
 		}
-		header('Location: ' . $target, true, 301);
+		header('Location: ' . $target, true, 307);
 		exit;
 	}
 
@@ -151,25 +151,11 @@ class PubPageController extends Controller {
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	#[PublicPage]
-	public function getByTokenWithoutS($token) {
+	public function getByTokenRoot($token) {
+		// Root alias route: /raw/{token}
 		return $this->getByToken($token);
 	}
 
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
-	#[PublicPage]
-	public function getByTokenRoot($token) {
-		// Wrapper for root alias /raw/{token}, keeps legacy /apps/raw/{token} intact
-		return $this->getByTokenWithoutS($token);
-	}
-
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
-	#[PublicPage]
-	public function getByTokenRootLegacyS($token) {
-		// Wrapper for legacy root alias /raw/s/{token}
-		return $this->getByTokenWithoutS($token);
-	}
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
@@ -203,25 +189,11 @@ class PubPageController extends Controller {
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	#[PublicPage]
-	public function getByTokenAndPathWithoutS($token, $path) {
+	public function getByTokenAndPathRoot($token, $path) {
+		// Root alias route: /raw/{token}/{path}
 		return $this->getByTokenAndPath($token, $path);
 	}
 
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
-	#[PublicPage]
-	public function getByTokenAndPathRoot($token, $path) {
-		// Wrapper for root alias /raw/{token}/{path}
-		return $this->getByTokenAndPathWithoutS($token, $path);
-	}
-
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
-	#[PublicPage]
-	public function getByTokenAndPathRootLegacyS($token, $path) {
-		// Wrapper for legacy root alias /raw/s/{token}/{path}
-		return $this->getByTokenAndPathWithoutS($token, $path);
-	}
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]

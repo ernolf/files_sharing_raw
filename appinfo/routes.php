@@ -7,10 +7,7 @@
 
 return [
 	'routes' => [
-		// All app routes must be reachable ONLY under /raw/ (root routes).
-		// Require a core configuration allowlist entry (Nextcloud rootUrlApps including files_sharing_raw)
-		// in the file lib/private/AppFramework/Routing/RouteParser.php
-
+		// API routes — always reachable under /apps/files_sharing_raw/api/v1/...
 		['name' => 'rawPublicUrl#getTokenUrl', 'url' => '/api/v1/raw-public-url', 'verb' => 'GET'],
 
 		// Raw share registry API (used by Files sidebar UI)
@@ -20,6 +17,9 @@ return [
 			'requirements' => array('fileId' => '\d+')
 		],
 
+		// Root alias routes: /raw/{token} and /raw/{token}/{path}
+		// Require 'files_sharing_raw' in rootUrlApps (Nextcloud core RouteParser.php).
+		// Requests via fallback URLs below are 307-redirected to these when root aliases are active.
 		['name' => 'privatePage#getByPath', 'url' => '/u/{userId}/{path}', 'root' => '/raw',
 			'requirements' => array(
 				'userId' => '[^/]+',
@@ -35,7 +35,6 @@ return [
 			'defaults' => array('path' => ''),
 		],
 
-		// Public URLs (root alias): /raw/{token} and /raw/{token}/{path}
 		['name' => 'pubPage#getByTokenRoot', 'url' => '/{token}', 'root' => '/raw', 'verb' => 'GET',
 			'requirements' => array('token' => '[A-Za-z0-9-]+')
 		],
@@ -46,5 +45,9 @@ return [
 				'path' => '.+'
 			)
 		],
+
+		// Note: when files_sharing_raw is NOT listed in rootUrlApps, Nextcloud automatically
+		// registers the root-alias routes above at /apps/files_sharing_raw/... instead of /raw/...
+		// No separate fallback routes are needed.
 	]
 ];

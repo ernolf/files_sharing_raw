@@ -1,5 +1,23 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- `patch-route-parser.sh`: idempotent helper script to add `files_sharing_raw`
+  to the `rootUrlApps` constant in Nextcloud core `RouteParser.php`.
+
+### Fixed
+- Canonical URL redirect now uses 307 (Temporary Redirect) instead of 301
+  (Permanent Redirect) to prevent permanent browser caching.
+
+### Changed
+- `PubPageController`: removed dead wrapper methods (`getByTokenWithoutS`,
+  `getByTokenAndPathWithoutS`, `getByTokenRootLegacyS`,
+  `getByTokenAndPathRootLegacyS`); root alias methods now call the
+  implementation methods directly.
+- Route comments updated for clarity.
+- Readme restructured into feature-oriented chapters.
+
 ## 0.5.0
 
 ### Breaking Changes
@@ -19,14 +37,14 @@
 - **DB-based share authorization** (additive to config allowlist):
   - Config (`allowed_raw_tokens`, `allowed_raw_token_wildcards`) retains highest priority.
   - UI toggle creates a DB row that additively allows the share.
-- **Canonical URL redirect**: when `files_sharing_raw` is in `rootUrlApps`, requests to `/apps/files_sharing_raw/{token}/...` are 301-redirected to canonical `/raw/{token}/...`
+- **Canonical URL redirect**: when `files_sharing_raw` is in `rootUrlApps`, requests to `/apps/files_sharing_raw/{token}/...` are 307-redirected to canonical `/raw/{token}/...`
 - **`PublicUrlBuilder`** service + `PublicUrlController` (`/api/v1/raw-public-url`) for generating canonical raw URLs.
 - **Per-share DB CSP override**: `CspManager` reads a custom CSP string from the DB for raw-enabled shares (priority: config token > DB CSP > path/extension/mimetype rules).
 - **`IBootstrap`** interface implemented; event listeners registered via `register()` (modern Nextcloud pattern).
 - **SPDX copyright/license headers** added to all source files.
 
 ### Changed
-- Requirement bump: PHP min-version 8.0 → 8.1, Nextcloud min-version 26 → 31.
+- Requirement bump: PHP min-version 8.0 → 8.1, Nextcloud min-version 26 → 32.
 - `CspManager`: all URL forms (`/raw/...`, `/rss/...`) normalized to `/apps/files_sharing_raw/...` before CSP matching rules are applied.
 - `PubPageController`: share type now validated (must be `SHARE_TYPE_LINK`); non-directory shares accessed with a sub-path return plain 404 instead of throwing an exception.
 

@@ -1,5 +1,9 @@
 # `files_sharing_raw` — Nextcloud raw file server
 
+**`files_sharing_raw`** is the actively maintained successor to [`ernolf/raw`](https://github.com/ernolf/raw), which stopped working with Nextcloud 32 due to breaking API changes (`OCP\Share` was removed). `files_sharing_raw` was rebuilt from the ground up to be compatible with Nextcloud 32 and later, while adding a proper database registry, a Files sidebar UI, per-share CSP overrides, webserver offload support, and more.
+
+The longer app ID was chosen deliberately: from the outset, a [pull request to Nextcloud core](https://github.com/nextcloud/server/pull/58648) was planned to register `files_sharing_raw` in the `rootUrlApps` list — which is what enables the short, clean `/raw/{token}` URLs. Until that PR is merged and shipped, the app automatically falls back to longer URLs under `/apps/files_sharing_raw/{token}` (see [URL forms](#url-forms)).
+
 **`files_sharing_raw`** serves files **as-is** so you can link directly to the file itself (i.e. without any of Nextcloud's UI). This makes it easy to host static web pages, RSS feeds, images, or other assets and embed/link them elsewhere.
 
 **Design goals**
@@ -27,6 +31,7 @@
   * [Public shares](#public-shares)
   * [Private user files](#private-user-files)
   * [Root aliases (`/raw` and `/rss`)](#root-aliases-raw-and-rss)
+  * [Fallback URLs (without `rootUrlApps`)](#fallback-urls-without-rooturlapps)
 
 * [Enabling raw access](#enabling-raw-access)
 
@@ -74,6 +79,8 @@
 
 * [Installation](#installation)
 
+  * [Activating root alias URLs (`/raw/`)](#activating-root-alias-urls-raw)
+  * [Migrating from the `raw` app](#migrating-from-the-raw-app)
   * [Updating](#updating)
 
 ---
@@ -91,8 +98,8 @@
 5. (Optional) Alternatively or additionally, allowlist tokens in [`config/{raw.}config.php`](#via-config-allowed_raw_tokens-and-wildcards) — useful for automation or custom link names.
 6. (Optional) Configure CSP policies via `raw_csp`.
 
-> [!IMPORTANT]
-> The app requires the `/raw/` root alias to be active. This needs a one-time entry for `files_sharing_raw` in Nextcloud core's `lib/private/AppFramework/Routing/RouteParser.php`. Without it, the app cannot serve requests.
+> [!NOTE]
+> The short `/raw/{token}` URLs require the `rootUrlApps` entry described in [Installation](#installation). Without it, the app automatically falls back to longer `/apps/files_sharing_raw/{token}` URLs.
 
 ---
 
@@ -118,9 +125,6 @@ If the share is a folder, files within it are accessible as:
 https://my-nextcloud/raw/aBc123DeF456xyZ/path/to/file
 ```
 
-> [!NOTE]
-> Requests to `/apps/files_sharing_raw/{token}/...` are automatically 301-redirected to the canonical `/raw/{token}/...` form (when the root alias is active).
-
 ### Private user files
 
 A user can access their own private files (they must be logged in as that user). For example, a file named `test.html` in anansi's Documents folder would be available at:
@@ -136,17 +140,29 @@ The `/u/` prefix is **required** and cannot be omitted.
 
 ### Root aliases (`/raw` and `/rss`)
 
-The app exclusively uses root aliases. All public access goes through `/raw/{token}`, all private access through `/raw/u/{userId}/{path}`.
+When the `rootUrlApps` entry is active (see [Activating root alias URLs](#activating-root-alias-urls-raw)), the app uses short root alias URLs:
 
-Special namespace shortcut:
-- `/rss`            (behaves like `/raw/rss`)
-- `/rss/{path}`     (behaves like `/raw/rss/{path}`)
+| Purpose | URL |
+|---|---|
+| Public share | `/raw/{token}` |
+| Public share + path | `/raw/{token}/{path}` |
+| Private file | `/raw/u/{userId}/{path}` |
+| RSS alias | `/rss` or `/rss/{path}` |
 
 > [!NOTE]
 > `/rss` and `/rss/{path}` are convenience shortcuts that internally behave exactly like `/raw/rss` and `/raw/rss/{path}`. The underlying share token is `rss` — it must be enabled like any other token (UI toggle or config allowlist).
 
-> [!IMPORTANT]
-> Root aliases require a core configuration allowlist entry (Nextcloud `rootUrlApps` including `files_sharing_raw`) in the file `lib/private/AppFramework/Routing/RouteParser.php` in Nextcloud core.
+### Fallback URLs (without `rootUrlApps`)
+
+If the `rootUrlApps` entry is not yet active (see [Installation](#installation)), the app falls back to longer URLs:
+
+| Purpose | URL |
+|---|---|
+| Public share | `/apps/files_sharing_raw/{token}` |
+| Public share + path | `/apps/files_sharing_raw/{token}/{path}` |
+| Private file | `/apps/files_sharing_raw/u/{userId}/{path}` |
+
+The sidebar UI automatically shows the correct URL depending on whether root aliases are active. When root aliases are active, requests to fallback URLs are automatically **307-redirected** to the canonical `/raw/...` form.
 
 ---
 
@@ -720,13 +736,10 @@ For public endpoints, the app returns a minimal `text/plain` **404 Not found** r
 
 ### From the Nextcloud App Store
 
-This app is currently not published in the Nextcloud app store.
+This app is not yet published in the Nextcloud App Store. Once it is, installation will be:
 
-1. ~~Log into Nextcloud as admin.~~
-2. ~~Go to **Apps** → search for **Raw Fileserver** → Install.~~
-3. A pull request still needs to be made to add `files_sharing_raw` to `rootUrlApps`. However, until this is completed, the administrator will need to manually add the app to the `rootUrlApps` array after every update.
-
-After installation, a one-time entry for `files_sharing_raw` must be added in Nextcloud core's `lib/private/AppFramework/Routing/RouteParser.php` to activate the `/raw/` root alias.
+1. Log into Nextcloud as admin.
+2. Go to **Apps** → search for **Raw Fileserver** → Install.
 
 ### Manual installation (git)
 
@@ -739,17 +752,47 @@ After installation, a one-time entry for `files_sharing_raw` must be added in Ne
    occ app:enable files_sharing_raw
    ```
    or log into Nextcloud as admin, find and enable it in the list of apps.
-3. Add `files_sharing_raw` to `rootUrlApps` in Nextcloud core (see above).
 
-### Migrating from `raw`
+### Activating root alias URLs (`/raw/`)
 
-If you previously used the `raw` app:
+To use the short `/raw/{token}` URLs instead of the longer `/apps/files_sharing_raw/{token}` fallback, `files_sharing_raw` must be registered in Nextcloud core's `rootUrlApps` list. A [pull request has been submitted to Nextcloud core](https://github.com/nextcloud/server/pull/58648) for this. Until it is merged and shipped with a Nextcloud release, the entry must be added manually.
+
+The change is a single line in `lib/private/AppFramework/Routing/RouteParser.php`:
+
+```php
+private const rootUrlApps = [
+    'cloud_federation_api',
+    'core',
+    'files_sharing_raw',   // ← add this line
+    'files_sharing',
+    // ...
+];
+```
+
+A ready-made patch script is included in this repository:
+
+```bash
+chmod +x patch-route-parser.sh
+./patch-route-parser.sh
+# optionally with a custom path:
+./patch-route-parser.sh /path/to/nextcloud/lib/private/AppFramework/Routing/RouteParser.php
+```
+
+The script is idempotent — running it multiple times is safe.
+
+> [!NOTE]
+> This manual step must be repeated after every Nextcloud core update that overwrites `RouteParser.php`. Once the PR is merged, no manual action will be needed.
+>
+> Without this entry the app still works — it simply uses the longer fallback URLs.
+
+### Migrating from the `raw` app
+
+If you previously used the original `raw` app (which stopped working with Nextcloud 32):
 
 1. Disable `raw`: `occ app:disable raw`
-2. Install `files_sharing_raw` (see above).
-3. Enable `files_sharing_raw`: `occ app:enable files_sharing_raw`
+2. Install and enable `files_sharing_raw` (see above).
 
-All `raw_*` config keys are reused automatically. No data migration is needed.
+All `raw_*` config keys (`allowed_raw_tokens`, `raw_csp`, etc.) are reused automatically — no data migration is needed.
 
 ## Updating
 
