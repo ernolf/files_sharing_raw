@@ -11,6 +11,8 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\Files\IRootFolder;
+use OCP\IConfig;
+use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
 use OCP\Share\IManager;
@@ -22,6 +24,8 @@ class RawShareApiController extends Controller {
 	private RawShareRegistry $registry;
 	private PublicUrlBuilder $urlBuilder;
 	private IRootFolder $rootFolder;
+	private IConfig $config;
+	private IGroupManager $groupManager;
 
 	public function __construct(
 		string $appName,
@@ -30,7 +34,9 @@ class RawShareApiController extends Controller {
 		IUserSession $userSession,
 		RawShareRegistry $registry,
 		PublicUrlBuilder $urlBuilder,
-		IRootFolder $rootFolder
+		IRootFolder $rootFolder,
+		IConfig $config,
+		IGroupManager $groupManager
 	) {
 		parent::__construct($appName, $request);
 		$this->shareManager = $shareManager;
@@ -38,6 +44,23 @@ class RawShareApiController extends Controller {
 		$this->registry = $registry;
 		$this->urlBuilder = $urlBuilder;
 		$this->rootFolder = $rootFolder;
+		$this->config = $config;
+		$this->groupManager = $groupManager;
+	}
+
+	/**
+	 * Check whether the current user is allowed to edit the per-share CSP.
+	 * The allowed group is stored in appconfig key 'csp_editor_group' and
+	 * defaults to 'admin'. Change via:
+	 *   occ config:app:set files_sharing_raw csp_editor_group --value="raw_csp_allowed"
+	 */
+	private function canCurrentUserEditCsp(): bool {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return false;
+		}
+		$group = $this->config->getAppValue('files_sharing_raw', 'csp_editor_group', 'admin');
+		return $this->groupManager->isInGroup($user->getUID(), $group);
 	}
 
 	#[NoAdminRequired]
@@ -57,6 +80,7 @@ class RawShareApiController extends Controller {
 			'enabled' => $enabled,
 			'csp' => $csp,
 			'rawOnly' => $rawOnly,
+			'canEditCsp' => $this->canCurrentUserEditCsp(),
 			'token' => $token,
 			'rawUrl' => $this->urlBuilder->publicTokenUrl($token),
 		]);
@@ -71,9 +95,16 @@ class RawShareApiController extends Controller {
 
 		$enabled = $this->toBool($this->request->getParam('enabled', false));
 		$rawOnly = $this->toBool($this->request->getParam('rawOnly', false));
-		$csp = $this->request->getParam('csp', null);
-		if ($csp !== null && !is_string($csp)) {
-			$csp = null;
+
+		if ($this->canCurrentUserEditCsp()) {
+			// User is allowed to change the CSP.
+			$csp = $this->request->getParam('csp', null);
+			if ($csp !== null && !is_string($csp)) {
+				$csp = null;
+			}
+		} else {
+			// User is not in the CSP editor group — preserve whatever is stored.
+			$csp = $this->registry->getStoredCsp($shareId);
 		}
 
 		if ($enabled) {
@@ -89,6 +120,7 @@ class RawShareApiController extends Controller {
 			'enabled' => $enabled,
 			'csp' => $enabled ? $this->registry->getCsp($shareId) : null,
 			'rawOnly' => $enabled ? $this->registry->isRawOnly($shareId) : false,
+			'canEditCsp' => $this->canCurrentUserEditCsp(),
 			'token' => $token,
 			'rawUrl' => $this->urlBuilder->publicTokenUrl($token),
 		]);

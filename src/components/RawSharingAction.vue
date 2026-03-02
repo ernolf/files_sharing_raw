@@ -51,6 +51,7 @@
 								:aria-label="t('files_sharing_raw', 'Raw link options')">
 
 								<NcActionButton
+									v-if="canEditCsp"
 									:close-after-click="true"
 									@click.prevent="showCspEditor = !showCspEditor">
 									<template #icon>
@@ -201,6 +202,7 @@ const saveRegistrar = ref(null)
 const rawUrl = ref('')
 const copySuccess = ref(false)
 const showCspEditor = ref(false)
+const canEditCsp = ref(false)
 const cspInput = ref('')
 const savingCsp = ref(false)
 
@@ -272,6 +274,7 @@ async function loadStateFromBackend() {
 
 	enabled.value = !!data.enabled
 	rawOnly.value = !!data.rawOnly
+	canEditCsp.value = !!data.canEditCsp
 	// GET already returns rawUrl and csp — no second request needed
 	rawUrl.value = data.rawUrl ?? ''
 	cspInput.value = data.csp ?? ''

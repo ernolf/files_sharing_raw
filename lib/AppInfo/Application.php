@@ -23,6 +23,7 @@ use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\IConfig;
 use OCP\IContainer;
+use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
@@ -162,8 +163,12 @@ class Application extends App implements IBootstrap {
 			$publicUrlBuilder = $container->query('PublicUrlBuilder');
 			/** @var IRootFolder $rootFolder */
 			$rootFolder = $container->query('OCP\Files\IRootFolder');
+			/** @var IConfig $config */
+			$config = $container->query('OCP\IConfig');
+			/** @var IGroupManager $groupManager */
+			$groupManager = $container->query('OCP\IGroupManager');
 
-			return new RawShareApiController($appName, $request, $shareManager, $userSession, $registry, $publicUrlBuilder, $rootFolder);
+			return new RawShareApiController($appName, $request, $shareManager, $userSession, $registry, $publicUrlBuilder, $rootFolder, $config, $groupManager);
 		});
 	}
 }

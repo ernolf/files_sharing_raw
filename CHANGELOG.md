@@ -1,33 +1,23 @@
 # Changelog
 
-## [Unreleased]
+## [Unreleased] — targeting v0.5.0
 
-### Added
-- `patch-route-parser.sh`: idempotent helper script to add `files_sharing_raw`
-  to the `rootUrlApps` constant in Nextcloud core `RouteParser.php`.
-
-### Fixed
-- Canonical URL redirect now uses 307 (Temporary Redirect) instead of 301
-  (Permanent Redirect) to prevent permanent browser caching.
-
-### Changed
-- `PubPageController`: removed dead wrapper methods (`getByTokenWithoutS`,
-  `getByTokenAndPathWithoutS`, `getByTokenRootLegacyS`,
-  `getByTokenAndPathRootLegacyS`); root alias methods now call the
-  implementation methods directly.
-- Route comments updated for clarity.
-- Readme restructured into feature-oriented chapters.
-
-## 0.5.0
+> This version has not yet been published to the Nextcloud App Store.
 
 ### Breaking Changes
-- **App renamed** from `raw` to `files_sharing_raw`; PHP namespace from `OCA\Raw` to `OCA\FilesSharingRaw`. All routes are now exclusively available under the `/raw/` root alias (requires `files_sharing_raw` entry in Nextcloud core `RouteParser.php`). Config keys (`raw_*`) are **unchanged**.
-- Routes without root alias removed: `/apps/raw/s/{token}`, `/apps/raw/{token}`, `/apps/raw/{token}/{path}`, `/apps/raw/u/{userId}/{path}`. Private access now requires `/raw/u/{userId}/{path}`
+- **App renamed** from `raw` to `files_sharing_raw`; PHP namespace from `OCA\Raw`
+  to `OCA\FilesSharingRaw`. All routes are now exclusively available under the
+  `/raw/` root alias (requires `files_sharing_raw` entry in Nextcloud core
+  `RouteParser.php`). Config keys (`raw_*`) are **unchanged**.
+- Routes without root alias removed: `/apps/raw/s/{token}`, `/apps/raw/{token}`,
+  `/apps/raw/{token}/{path}`, `/apps/raw/u/{userId}/{path}`.
+  Private access now requires `/raw/u/{userId}/{path}`.
 
 ### Added
 - **UI-based raw share management** (Files sidebar integration):
   - "Enable raw link" toggle in the share's Advanced settings panel.
-  - REST API: `GET/POST /api/v1/raw-share/{shareId}`, `GET /api/v1/raw-shares/{fileId}`, `GET /api/v1/raw-public-url`
+  - REST API: `GET/POST /api/v1/raw-share/{shareId}`,
+    `GET /api/v1/raw-shares/{fileId}`, `GET /api/v1/raw-public-url`
   - DB table `raw_shares`: stores per-share enabled state and optional
     custom CSP override per share.
   - `ShareDeletedListener`: auto-purges DB entry on share deletion.
@@ -37,16 +27,45 @@
 - **DB-based share authorization** (additive to config allowlist):
   - Config (`allowed_raw_tokens`, `allowed_raw_token_wildcards`) retains highest priority.
   - UI toggle creates a DB row that additively allows the share.
-- **Canonical URL redirect**: when `files_sharing_raw` is in `rootUrlApps`, requests to `/apps/files_sharing_raw/{token}/...` are 307-redirected to canonical `/raw/{token}/...`
-- **`PublicUrlBuilder`** service + `PublicUrlController` (`/api/v1/raw-public-url`) for generating canonical raw URLs.
-- **Per-share DB CSP override**: `CspManager` reads a custom CSP string from the DB for raw-enabled shares (priority: config token > DB CSP > path/extension/mimetype rules).
-- **`IBootstrap`** interface implemented; event listeners registered via `register()` (modern Nextcloud pattern).
+- **Canonical URL redirect**: when `files_sharing_raw` is in `rootUrlApps`,
+  requests to `/apps/files_sharing_raw/{token}/...` are 307-redirected to
+  canonical `/raw/{token}/...`
+- **`PublicUrlBuilder`** service + `PublicUrlController`
+  (`/api/v1/raw-public-url`) for generating canonical raw URLs.
+- **Per-share DB CSP override**: `CspManager` reads a custom CSP string from
+  the DB for raw-enabled shares
+  (priority: config token > DB CSP > path/extension/mimetype rules).
+- **CSP preset selector** in the Files sidebar: choose from predefined CSP
+  templates (Server default, Sandbox, Images only, Documents, Audio/Video)
+  or enter a custom policy.
+- **`raw_only` flag per share**: mark a share as raw-only to block the standard
+  Nextcloud `/s/{token}` share page; only the `/raw/{token}` URL remains active.
+  `ShareRawOnlyMiddleware` enforces this globally.
+- **CSP editor group restriction**: the **Edit CSP** option in the sidebar
+  three-dot menu is only visible to members of a configurable group
+  (default: `admin`). Users outside the group cannot change a share's CSP via
+  the API — existing values are silently preserved. Configure via:
+  ```
+  occ config:app:set files_sharing_raw csp_editor_group --value="raw_csp_allowed"
+  ```
+- `patch-route-parser.sh`: idempotent helper script to add `files_sharing_raw`
+  to the `rootUrlApps` constant in Nextcloud core `RouteParser.php`.
+- **`IBootstrap`** interface implemented; event listeners registered via
+  `register()` (modern Nextcloud pattern).
 - **SPDX copyright/license headers** added to all source files.
+
+### Fixed
+- Canonical URL redirect uses 307 (Temporary Redirect) instead of 301
+  (Permanent Redirect) to prevent permanent browser caching.
 
 ### Changed
 - Requirement bump: PHP min-version 8.0 → 8.1, Nextcloud min-version 26 → 32.
-- `CspManager`: all URL forms (`/raw/...`, `/rss/...`) normalized to `/apps/files_sharing_raw/...` before CSP matching rules are applied.
-- `PubPageController`: share type now validated (must be `SHARE_TYPE_LINK`); non-directory shares accessed with a sub-path return plain 404 instead of throwing an exception.
+- `CspManager`: all URL forms (`/raw/...`, `/rss/...`) normalized to
+  `/apps/files_sharing_raw/...` before CSP matching rules are applied.
+- `PubPageController`: share type now validated (must be `SHARE_TYPE_LINK`);
+  non-directory shares accessed with a sub-path return plain 404 instead of
+  throwing an exception; dead wrapper methods removed.
+- Readme restructured into feature-oriented chapters.
 
 ## 0.4.1
 ### Added

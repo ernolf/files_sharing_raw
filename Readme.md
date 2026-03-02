@@ -325,6 +325,18 @@ When deciding which CSP to send, the app evaluates selectors in this order:
 
 ### Per-share CSP (Files sidebar)
 
+> [!NOTE]
+> **Edit CSP** is restricted to the `admin` group by default. To delegate this
+> to a custom group, create the group, add the permitted users, then point the
+> app to it:
+> ```bash
+> occ group:add raw_csp_allowed
+> occ group:adduser raw_csp_allowed <uid>
+> occ config:app:set files_sharing_raw csp_editor_group --value="raw_csp_allowed"
+> ```
+> Users outside the configured group (`raw_csp_allowed` is just an example name)
+> see no **Edit CSP** entry in the menu and cannot change a share's CSP via the API.
+
 In the **three-dot menu (⋯)** next to the raw link row, **Edit CSP** opens an inline panel for setting a per-share Content-Security-Policy override. The value is stored in the database and takes effect immediately for all subsequent raw requests to this share. Its priority in the matching chain is: below the config `token` rule, above all path/extension/mimetype rules.
 
 The panel contains a **preset dropdown** and an **editable text field**:

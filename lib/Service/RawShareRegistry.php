@@ -38,6 +38,16 @@ class RawShareRegistry {
 		return $e->getCsp();
 	}
 
+	/**
+	 * Return the stored CSP regardless of enabled state.
+	 * Used to preserve an existing CSP when a user without CSP-editor
+	 * privileges calls the set() API endpoint.
+	 */
+	public function getStoredCsp(int $shareId): ?string {
+		$e = $this->mapper->findByShareIdOrNull($shareId);
+		return $e !== null ? $e->getCsp() : null;
+	}
+
 	public function isRawOnly(int $shareId): bool {
 		$e = $this->mapper->findByShareIdOrNull($shareId);
 		if ($e === null) {
