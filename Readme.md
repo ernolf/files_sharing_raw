@@ -1,9 +1,7 @@
-# `files_sharing_raw` — Nextcloud raw file server
+# `files_sharing_raw` — **Nextcloud raw file server**
 
-**`files_sharing_raw`** is the actively maintained successor to [`ernolf/raw`](https://github.com/ernolf/raw), which stopped working with Nextcloud 32 due to breaking API changes (`OCP\Share` was removed). `files_sharing_raw` was rebuilt from the ground up to be compatible with Nextcloud 32 and later, while adding a proper database registry, a Files sidebar UI, per-share CSP overrides, webserver offload support, and more.
-
-The longer app ID was chosen deliberately: from the outset, a [pull request to Nextcloud core](https://github.com/nextcloud/server/pull/58648) was planned to register `files_sharing_raw` in the `rootUrlApps` list — which is what enables the short, clean `/raw/{token}` URLs. Until that PR is merged and shipped, the app automatically falls back to longer URLs under `/apps/files_sharing_raw/{token}` (see [URL forms](#url-forms)).
-
+---
+---
 **`files_sharing_raw`** serves files **as-is** so you can link directly to the file itself (i.e. without any of Nextcloud's UI). This makes it easy to host static web pages, RSS feeds, images, or other assets and embed/link them elsewhere.
 
 **Design goals**
@@ -19,6 +17,10 @@ The longer app ID was chosen deliberately: from the outset, a [pull request to N
 * **Streaming by default**: for normal `GET` (`200`) responses, the body is streamed whenever possible instead of loading the entire file into memory.
 
 *) For security and privacy the content is served with a [Content-Security-Policy][] (CSP) header. You can configure CSP rules in detail via Nextcloud's system [`config/{raw.}config.php`](#keep-raw-settings-in-a-dedicated-config-file) key `raw_csp`. See [Content Security Policy](#content-security-policy) below.
+
+> [!NOTE]
+> **`files_sharing_raw`** is the actively maintained successor to [`ernolf/raw`](https://github.com/ernolf/raw), which stopped working with Nextcloud 32 due to breaking API changes (`OCP\Share` was removed). `files_sharing_raw` was rebuilt from the ground up to be compatible with Nextcloud 32 and later, while adding a proper database registry, a Files sidebar UI, per-share CSP overrides, webserver offload support, and more.  
+> The longer app ID was chosen deliberately: from the outset, a [pull request to Nextcloud core](https://github.com/nextcloud/server/pull/58648) was planned to register `files_sharing_raw` in the `rootUrlApps` list — which is what enables the short, clean `/raw/{token}` URLs. Until that PR is merged and shipped, the app automatically falls back to longer URLs under `/apps/files_sharing_raw/{token}` (see [URL forms](#url-forms)).
 
 ---
 
@@ -835,3 +837,4 @@ All `raw_*` config keys (`allowed_raw_tokens`, `raw_csp`, etc.) are reused autom
 [`form-action`]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/form-action
 [`frame-ancestors`]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/frame-ancestors
 [`upgrade-insecure-requests`]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/upgrade-insecure-requests
+
