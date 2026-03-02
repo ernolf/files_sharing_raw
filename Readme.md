@@ -301,11 +301,9 @@ In this configuration `html`, `platform`, and any `nc-*` token are accessible vi
 
 > [!NOTE]
 > If no CSP matches a request (no per-share override, no matching config rule), the app falls back to this safe, very restrictive default:
->
 > ```
 > "sandbox; default-src 'none'; style-src data: 'unsafe-inline'; img-src data:; media-src data:; font-src data:; frame-src data:"
 > ```
->
 > This fallback is hardcoded inside the app (not in `config.php`).
 
 ### Matching priority
@@ -326,16 +324,13 @@ When deciding which CSP to send, the app evaluates selectors in this order:
 ### Per-share CSP (Files sidebar)
 
 > [!NOTE]
-> **Edit CSP** is restricted to the `admin` group by default. To delegate this
-> to a custom group, create the group, add the permitted users, then point the
-> app to it:
+> **Edit CSP** is restricted to the `admin` group by default. To delegate this to a custom group, create the group, add the permitted users, then point the app to it:
 > ```bash
 > occ group:add raw_csp_allowed
 > occ group:adduser raw_csp_allowed <uid>
 > occ config:app:set files_sharing_raw csp_editor_group --value="raw_csp_allowed"
 > ```
-> Users outside the configured group (`raw_csp_allowed` is just an example name)
-> see no **Edit CSP** entry in the menu and cannot change a share's CSP via the API.
+> Users outside the configured group (`raw_csp_allowed` is just an example name) see no **Edit CSP** entry in the menu and cannot change a share's CSP via the API.
 
 In the **three-dot menu (⋯)** next to the raw link row, **Edit CSP** opens an inline panel for setting a per-share Content-Security-Policy override. The value is stored in the database and takes effect immediately for all subsequent raw requests to this share. Its priority in the matching chain is: below the config `token` rule, above all path/extension/mimetype rules.
 
@@ -587,6 +582,11 @@ For large files you can optionally let the webserver send the file body (PHP ret
 - `raw_sendfile_min_size_mb` (int, default: 0) **)
 - `raw_sendfile_nginx_prefix` (string, default: /_raw_sendfile)
 
+> [!WARNING]
+> **Webserver offload requires correct webserver configuration. The app enforces its own path restriction (files must be inside Nextcloud's `datadirectory`), but the webserver-side configuration is entirely the administrator's responsibility.**
+> - **Nginx — `internal;` is mandatory.** Without it, the `/_raw_sendfile/` location is reachable directly from the internet, bypassing all PHP authorization checks. Any file inside the Nextcloud data directory would be accessible to anyone without authentication. Always verify that the location block carries the `internal;` directive before enabling offload.
+> - **Apache — `XSendFilePath` is recommended defense-in-depth.** The app only ever sends paths within the datadirectory via `X-Sendfile`, so a missing `XSendFilePath` does not open an independent attack path. However, configuring it explicitly limits the blast radius should any unexpected behavior occur in the module itself.
+
 > [!NOTE]
 > *) By default, offload is disabled for private raw URLs (`/raw/u/...`) to keep authenticated endpoints conservative by default. Enable `raw_sendfile_allow_private` to allow webserver offload for private raw responses too.
 
@@ -645,9 +645,6 @@ $CONFIG = array (
 );
 ```
 
-Security notes:
-- Offload is only attempted for files that can be resolved to a local filesystem path and are located inside Nextcloud's datadirectory.
-
 #### Offload debug header
 
 To debug whether offload/streaming was used, send this request header:
@@ -658,7 +655,7 @@ The response may include:
 - `X-Raw-Offload: <status>; reason=<reason>`
 
 > [!NOTE]
-> When offload is active and actually used, the response may include an `X-Raw-Offload` header (e.g. `apache-xsendfile` / `nginx-x-accel`) even without debug enabled.
+> When offload is active and actually used, the response may include an `X-Raw-Offload` header (e.g. `apache-xsendfile` / `nginx-x-accel`) even without debug enabled.  
 > If you send `X-Raw-Offload-Debug: 1`, the app adds `reason=...` and can also emit a "not offloaded" reason, which is useful to validate your config and thresholds.
 
 ### HTTP behavior
