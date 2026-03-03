@@ -1,8 +1,6 @@
 # Changelog
 
-## [Unreleased] — targeting v0.5.0
-
-> This version has not yet been published to the Nextcloud App Store.
+## 0.5.0 — 2026-03-03
 
 ### Breaking Changes
 - **App renamed** from `raw` to `files_sharing_raw`; PHP namespace from `OCA\Raw`

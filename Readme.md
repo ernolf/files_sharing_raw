@@ -747,22 +747,41 @@ For public endpoints, the app returns a minimal `text/plain` **404 Not found** r
 
 ### From the Nextcloud App Store
 
-This app is not yet published in the Nextcloud App Store. Once it is, installation will be:
+The easiest way to install this app is via the Nextcloud App Store:
 
 1. Log into Nextcloud as admin.
 2. Go to **Apps** → search for **Raw Fileserver** → Install.
 
-### Manual installation (git)
+### Manual installation (release tarball)
 
-1. Clone this repo into your Nextcloud installation's `/apps` (or `/custom_apps`) folder:
+1. Download the latest release tarball (`files_sharing_raw.tar.gz`) from the
+   [GitHub Releases page](https://github.com/ernolf/files_sharing_raw/releases).
+2. Extract it into your Nextcloud `/apps` (or `/custom_apps`) folder:
+   ```bash
+   tar -xzf files_sharing_raw.tar.gz -C /path/to/nextcloud/apps/
    ```
-   git clone https://github.com/ernolf/files_sharing_raw
-   ```
-2. Enable the app:
-   ```
+3. Enable the app:
+   ```bash
    occ app:enable files_sharing_raw
    ```
-   or log into Nextcloud as admin, find and enable it in the list of apps.
+   or log into Nextcloud as admin and enable it in the Apps list.
+
+### Developer setup (from source)
+
+1. Clone the repository into your Nextcloud `/apps` (or `/custom_apps`) folder:
+   ```bash
+   git clone https://github.com/ernolf/files_sharing_raw
+   cd files_sharing_raw
+   ```
+2. Install frontend dependencies and build the JS bundle:
+   ```bash
+   npm ci
+   npm run build
+   ```
+3. Enable the app:
+   ```bash
+   occ app:enable files_sharing_raw
+   ```
 
 ### Activating root alias URLs (`/raw/`)
 
@@ -811,7 +830,8 @@ All `raw_*` config keys (`allowed_raw_tokens`, `raw_csp`, etc.) are reused autom
    ```
    occ app:disable files_sharing_raw
    ```
-2. Update the code (e.g. `git pull` in the app directory, ~~or install a new release via the App Store~~).
+2. Update the app via the Nextcloud App Store, or manually by downloading and extracting the latest
+   release tarball (see [Manual installation](#manual-installation-release-tarball) above).
 3. Enable the app again:
    ```
    occ app:enable files_sharing_raw

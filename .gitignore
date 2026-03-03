@@ -1,4 +1,9 @@
-# node
+# Built js package
+js/*
+
+### NPM ###
+
+# Node modules
 node_modules/
 
 # local utility files
