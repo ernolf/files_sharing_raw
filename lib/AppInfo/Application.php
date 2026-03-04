@@ -14,6 +14,7 @@ use OCA\FilesSharingRaw\Listener\FilesLoadAdditionalScriptsListener;
 use OCA\FilesSharingRaw\Listener\ShareDeletedListener;
 use OCA\FilesSharingRaw\Listener\ShareUpdatedListener;
 use OCA\FilesSharingRaw\Middleware\ShareRawOnlyMiddleware;
+use OCA\FilesSharingRaw\SetupCheck\RouteParserPatchCheck;
 use OCA\FilesSharingRaw\Service\CspManager;
 use OCA\FilesSharingRaw\Service\PublicUrlBuilder;
 use OCA\FilesSharingRaw\Service\RawShareRegistry;
@@ -57,6 +58,9 @@ class Application extends App implements IBootstrap {
 
 		// Global middleware: block /s/{token} when raw_only is set
 		$context->registerMiddleware(ShareRawOnlyMiddleware::class, true);
+
+		// Setup check: warn if RouteParser.php has not been patched yet
+		$context->registerSetupCheck(RouteParserPatchCheck::class);
 	}
 
 	public function boot(IBootContext $context): void {

@@ -10,13 +10,11 @@
 * **Fast**: keep server work low (good for assets).
 * **Quiet failures**: plain 404 Not found (text/plain) for invalid/missing public shares (no Nextcloud HTML error pages), ideal for asset fetches.
 * **Privacy-friendly**: **cookie-free responses** (best effort).
-* **Allowlist-gated:** public raw access is opt-in — only explicitly enabled public share tokens are served. Tokens can be enabled via the **Files sidebar UI** (per share) or via the **config allowlist** (for power users / automation).
+* **Allowlist-gated:** public raw access is opt-in — only explicitly enabled public share tokens are served.
 * **Secure by default**: strict CSP with optional per-scope overrides. *)
-* **Efficient validators**: for `HEAD` and `304 Not Modified`, raw avoids reading file contents whenever possible (no unnecessary `getContent()`). It prefers "fast" validators (mtime+size) and only performs content-based MIME sniffing when it is actually needed for a final `200` response.
-* **MIME sniffing**: When content-based detection is needed, only a small prefix (currently 32 KiB) is sniffed, not the full file.
 * **Streaming by default**: for normal `GET` (`200`) responses, the body is streamed whenever possible instead of loading the entire file into memory.
 
-*) For security and privacy the content is served with a [Content-Security-Policy][] (CSP) header. You can configure CSP rules in detail via Nextcloud's system [`config/{raw.}config.php`](#keep-raw-settings-in-a-dedicated-config-file) key `raw_csp`. See [Content Security Policy](#content-security-policy) below.
+*) For security and privacy, the content is served with a configurable [Content-Security-Policy][] (CSP) header, allowing different policies per share token, path, file extension, or MIME type (with a safe hardcoded fallback).
 
 > [!NOTE]
 > **`files_sharing_raw`** is the actively maintained successor to [`ernolf/raw`](https://github.com/ernolf/raw), which stopped working with Nextcloud 32 due to breaking API changes (`OCP\Share` was removed). `files_sharing_raw` was rebuilt from the ground up to be compatible with Nextcloud 32 and later, while adding a proper database registry, a Files sidebar UI, per-share CSP overrides, webserver offload support, and more.  
@@ -50,6 +48,7 @@
   * [Via the Files sidebar](#via-the-files-sidebar-1)
   * [`raw_only_tokens`](#raw_only_tokens)
   * [`raw_only_token_wildcards`](#raw_only_token_wildcards)
+  * [Example configuration](#example-configuration)
 
 * [Content Security Policy](#content-security-policy)
 
@@ -79,11 +78,20 @@
 
 * [Notes & best practices](#notes--best-practices)
 
+  * [Keep `raw` settings in a dedicated config file](#keep-raw-settings-in-a-dedicated-config-file)
+
 * [Installation](#installation)
 
+  * [From the Nextcloud App Store](#from-the-nextcloud-app-store)
+  * [Manual installation (release tarball)](#manual-installation-release-tarball)
+  * [Developer setup (from source)](#developer-setup-from-source)
   * [Activating root alias URLs (`/raw/`)](#activating-root-alias-urls-raw)
   * [Migrating from the `raw` app](#migrating-from-the-raw-app)
-  * [Updating](#updating)
+
+* [Updating](#updating)
+
+  * [Via the Nextcloud App Store](#via-the-nextcloud-app-store)
+  * [Manual update](#manual-update)
 
 ---
 
@@ -101,7 +109,7 @@
 6. (Optional) Configure CSP policies via `raw_csp`.
 
 > [!NOTE]
-> The short `/raw/{token}` URLs require the `rootUrlApps` entry described in [Installation](#installation). Without it, the app automatically falls back to longer `/apps/files_sharing_raw/{token}` URLs.
+> The short `/raw/{token}` URLs require the `rootUrlApps` entry described in [Installation](#activating-root-alias-urls-raw). Without it, the app automatically falls back to longer `/apps/files_sharing_raw/{token}` URLs.
 
 ---
 
@@ -156,7 +164,7 @@ When the `rootUrlApps` entry is active (see [Activating root alias URLs](#activa
 
 ### Fallback URLs (without `rootUrlApps`)
 
-If the `rootUrlApps` entry is not yet active (see [Installation](#installation)), the app falls back to longer URLs:
+If the `rootUrlApps` entry is not yet active (see [Installation](#activating-root-alias-urls-raw), the app falls back to longer URLs:
 
 | Purpose | URL |
 |---|---|
@@ -799,16 +807,13 @@ private const rootUrlApps = [
 ];
 ```
 
-A ready-made patch script is included in this repository:
+A patch script is included in the app directory — just make it executable and run it:
 
 ```bash
-chmod +x patch-route-parser.sh
-./patch-route-parser.sh
-# optionally with a custom path:
-./patch-route-parser.sh /path/to/nextcloud/lib/private/AppFramework/Routing/RouteParser.php
+chmod +x patch-route-parser.sh && ./patch-route-parser.sh
 ```
 
-The script is idempotent — running it multiple times is safe.
+The script is idempotent — it finds `RouteParser.php` automatically and is safe to run multiple times.
 
 > [!NOTE]
 > This manual step must be repeated after every Nextcloud core update that overwrites `RouteParser.php`. Once the PR is merged, no manual action will be needed.
@@ -826,14 +831,25 @@ All `raw_*` config keys (`allowed_raw_tokens`, `raw_csp`, etc.) are reused autom
 
 ## Updating
 
+### Via the Nextcloud App Store
+
+Update directly from the Apps page in the Nextcloud admin UI — no manual steps needed.
+
+### Manual update
+
 1. Disable the app:
-   ```
+   ```bash
    occ app:disable files_sharing_raw
    ```
-2. Update the app via the Nextcloud App Store, or manually by downloading and extracting the latest
-   release tarball (see [Manual installation](#manual-installation-release-tarball) above).
+2. Update the app files — either via
+   - release tarball (see [Manual installation](#manual-installation-release-tarball) above)
+
+   or via  
+   - `git pull` + `npm ci && npm run build` (see [Developer setup (from source)](#developer-setup-from-source))
+
+   in the app directory.
 3. Enable the app again:
-   ```
+   ```bash
    occ app:enable files_sharing_raw
    ```
 

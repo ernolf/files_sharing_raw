@@ -8,41 +8,45 @@
       xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
     <id>files_sharing_raw</id>
     <name>Raw Fileserver</name>
-    <summary>Serves files on the World Wide Web</summary>
+    <summary>Serves files "raw" on the World Wide Web</summary>
     <description>
-Raw Fileserver simply returns any requested file, so you can link directly to a file itself (i.e. without any of NextCloud's interface around it). This enables you to host static web pages, rss feeds, images or other files, for example to link/embed them elsewhere on the web.
+Raw Fileserver (**`files_sharing_raw`**) serves files **as-is** so you can link directly to the file itself (i.e. without any of Nextcloud's UI). This makes it easy to host static web pages, RSS feeds, images, or other assets and embed/link them elsewhere.
 
-For security and privacy, the content is served with a [Content-Security-Policy][] header.
+## Design goals
+
+* **Minimal**: deliver bytes, not UI.
+* **Fast**: keep server work low (good for assets).
+* **Quiet failures**: plain 404 Not found (text/plain) for invalid/missing public shares (no Nextcloud HTML error pages), ideal for asset fetches.
+* **Privacy-friendly**: **cookie-free responses** (best effort).
+* **Allowlist-gated:** public raw access is opt-in — only explicitly enabled public share tokens are served.
+* **Secure by default**: strict CSP with optional per-scope overrides. *)
+* **Streaming by default**: for normal `GET` (`200`) responses, the body is streamed whenever possible instead of loading the entire file into memory.
+
+*) For security and privacy, the content is served with a configurable [Content-Security-Policy][] (CSP) header, allowing different policies per share token, path, file extension, or MIME type (with a safe hardcoded fallback).
 
 [Content-Security-Policy]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy
 
-The Content-Security-Policy (CSP) is configurable via the system config key `raw_csp`, allowing different policies per share token, path, file extension, or MIME type (with a safe hardcoded fallback).
-
 ## Usage
 
-The common usage is to first share a file and enable public access through a link. In the Advanced settings of this share (in the right sidebar), the Raw link must be enabled. If the share link is `https://my-nextcloud/s/aBc123DeF456xyZ`, then this app will provide access to the raw file at `https://my-nextcloud/raw/aBc123DeF456xyZ`.  If the share is a folder, the files within it are accessible as e.g. `https://my-nextcloud/raw/aBc123DeF456xyZ/path/to/file`.
+The common usage is to first share a file and enable public access through a link. In the Advanced settings of this share (in the right sidebar), the Raw link must be enabled. If the share link is `https://my-nextcloud/s/aBc123DeF456xyZ`, then this app will provide access to the raw file at `https://my-nextcloud/raw/aBc123DeF456xyZ`. If the share is a folder, the files within it are accessible as e.g. `https://my-nextcloud/raw/aBc123DeF456xyZ/path/to/file`.
 
 A user can also access their own private files. For example, a file named `test.html` in anansi's Documents folder would be available at `https://my-nextcloud/raw/u/anansi/Documents/test.html`.
-
-Tokens must be explicitly allowed for raw access. This can be done either via the UI in the share's advanced settings, or by whitelisting them in the config.php file.
-
-## Caching and conditional requests
-
-`files_sharing_raw` supports conditional requests and cache validation:
-
-- **ETags (`ETag` / `If-None-Match`)**: The app generates an `ETag` (preferred: mtime+size; fallback: content hash). If the client sends `If-None-Match` and the tag matches, the server responds with `304 Not Modified` and no body.
-- **Last-Modified (`Last-Modified` / `If-Modified-Since`)**: When possible the app sets the `Last-Modified` header from the file's modification time (mtime). `If-Modified-Since` is honored when `If-None-Match` is not present. For convenience the server accepts either an RFC-style HTTP-date or a plain Unix timestamp in `If-Modified-Since`.
-- **Cookie behavior**: The app removes PHP-set `Set-Cookie` headers for the current response to avoid sending cookies to clients.
 </description>
-    <version>0.5.0</version>
+    <version>0.5.1</version>
     <licence>agpl</licence>
     <author mail="raphael.gradenwitz@googlemail.com">[ernolf] - Raphael Gradenwitz</author>
     <namespace>FilesSharingRaw</namespace>
+    <documentation>
+        <admin>https://github.com/ernolf/files_sharing_raw#readme</admin>
+    </documentation>
     <category>files</category>
-    <repository type="git">https://github.com/ernolf/files_sharing_raw</repository>
+    <website>https://github.com/ernolf/files_sharing_raw</website>
     <bugs>https://github.com/ernolf/files_sharing_raw/issues</bugs>
+    <repository type="git">https://github.com/ernolf/files_sharing_raw</repository>
+    <donation type="paypal" title="Donate via PayPal">https://PayPal.Me/ernolf</donation>
+    <donation>https://github.com/sponsors/ernolf</donation>
     <dependencies>
-        <php min-version="8.1"/>
-        <nextcloud min-version="32" max-version="33"/>
+        <php min-version="8.1" max-version="8.5"/>
+        <nextcloud min-version="32" max-version="34"/>
     </dependencies>
 </info>
