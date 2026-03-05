@@ -6,5 +6,8 @@ js/*
 # Node modules
 node_modules/
 
+# Build artifacts
+build/
+
 # local utility files
 tree.txt

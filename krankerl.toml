@@ -1,0 +1,21 @@
+[package]
+# Commands run before packaging (rebuilds JS from scratch in a clean environment)
+before_cmds = [
+    "npm ci",
+    "npm run build",
+]
+
+# Files/dirs to exclude from the release tarball
+exclude = [
+    ".git",
+    ".gitignore",
+    ".github",
+    "build",
+    "node_modules",
+    "src",
+    "Makefile",
+    "package.json",
+    "package-lock.json",
+    "webpack.config.js",
+    "krankerl.toml",
+]
