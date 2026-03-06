@@ -16,6 +16,8 @@ class PublicUrlBuilder {
 	private $url;
 	/** @var LoggerInterface */
 	private $logger;
+	/** @var bool|null cached result of hasRootAliases() probe */
+	private ?bool $rootAliasesCache = null;
 
 	public function __construct(IConfig $config, IURLGenerator $url, LoggerInterface $logger) {
 		$this->config = $config;
@@ -24,6 +26,9 @@ class PublicUrlBuilder {
 	}
 
 	public function hasRootAliases(): bool {
+		if ($this->rootAliasesCache !== null) {
+			return $this->rootAliasesCache;
+		}
 		// Detect whether root aliases are active by probing route generation.
 		// If RouteParser.php lists files_sharing_raw in its rootUrlApps constant,
 		// linkToRoute returns a /raw/... URL; otherwise it falls back to /apps/files_sharing_raw/...
@@ -32,19 +37,15 @@ class PublicUrlBuilder {
 				'files_sharing_raw.pubPage.getByTokenRoot',
 				['token' => 'probe']
 			);
-			$result = \str_contains($url, '/raw/probe');
-			$this->logger->warning(
-				'[files_sharing_raw] hasRootAliases probe: url={url} result={result}',
-				['url' => $url, 'result' => $result ? 'true' : 'false']
-			);
-			return $result;
+			$this->rootAliasesCache = \str_contains($url, '/raw/probe');
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'[files_sharing_raw] hasRootAliases probe failed: {error}',
 				['error' => $e->getMessage()]
 			);
-			return false;
+			$this->rootAliasesCache = false;
 		}
+		return $this->rootAliasesCache;
 	}
 
 	/**
