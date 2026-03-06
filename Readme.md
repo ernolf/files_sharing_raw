@@ -101,9 +101,10 @@
 2. Create a **public share link** for a file or folder in Nextcloud.
 3. In the share's **Advanced settings** panel (Files sidebar), enable the **"Enable raw link"** toggle.
 4. Access the raw URL:
-
    * `https://my-nextcloud/raw/<token>`
-   * and for folders: `https://my-nextcloud/raw/<token>/<path/to/file>`
+
+   and for folders:
+   * `https://my-nextcloud/raw/<token>/<path/to/file>`
 
 5. (Optional) Alternatively or additionally, allowlist tokens in [`config/{raw.}config.php`](#via-config-allowed_raw_tokens-and-wildcards) — useful for automation or custom link names.
 6. (Optional) Configure CSP policies via `raw_csp`.
