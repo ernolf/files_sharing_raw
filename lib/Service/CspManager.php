@@ -278,8 +278,8 @@ class CspManager {
 				$normalized[$directive] = implode(' ', $sources);
 			}
 
-			// canonical ordering: default-src first, then common, then rest alphabetical
-			$priority = ['default-src','script-src','style-src','child-src','img-src','media-src','font-src','connect-src','frame-src','frame-ancestors'];
+			// canonical ordering: sandbox first, then default-src, then common, then rest alphabetical
+			$priority = ['sandbox','default-src','script-src','style-src','child-src','img-src','media-src','font-src','connect-src','frame-src','frame-ancestors'];
 			$ordered = [];
 			foreach ($priority as $d) {
 				if (isset($normalized[$d])) {
