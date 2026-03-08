@@ -630,6 +630,13 @@ For large files you can optionally let the webserver send the file body (PHP ret
 > [!TIP]
 > The app builds the Nginx `X-Accel-Redirect` target by stripping the resolved (`realpath`) Nextcloud `datadirectory` prefix from the local file path. Ensure your Nginx `alias` uses the same resolved datadirectory path (and includes a trailing `/`). If `datadirectory` is a symlink but Nginx points to the symlink path (or vice versa), the mapping can mismatch and offload will be skipped.
 
+> [!WARNING]
+> **Nginx offload bypasses PHP-set `Content-Security-Policy` headers.** When `X-Accel-Redirect` is used, nginx serves the file body directly — it does not forward custom response headers set by PHP, including `Content-Security-Policy`. As a result, offloaded responses carry **no CSP header at all**.
+>
+> **Recommendation:** set `raw_sendfile_min_size_mb` to a meaningful threshold (e.g. `10`) so that small files — HTML pages, text files, RSS feeds, images — where a CSP is security-relevant are served by PHP (with full CSP enforcement), while only large binary files — videos, archives, large data blobs — where a CSP is not meaningful are offloaded to nginx.
+>
+> If you require CSP on all responses regardless of file size, do not use `raw_sendfile_backend = 'nginx'`.
+
 Example offload configuration in [`config/{raw.}config.php`](#keep-raw-settings-in-a-dedicated-config-file) (for apache2):
 
 ```php
