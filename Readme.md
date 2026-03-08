@@ -192,6 +192,11 @@ Once the raw link is enabled, additional options become available via the **thre
 * **Raw only** — see [Raw-only mode](#raw-only-mode).
 * **Edit CSP** — see [Per-share CSP (Files sidebar)](#per-share-csp-files-sidebar).
 
+> [!WARNING]
+> **Password-protected shares are served without a password check.** Raw delivery is intentionally headless — there is no browser UI, no login form, and no place for a password prompt. As a result, `/raw/{token}` bypasses any password that is set on the Nextcloud share and delivers the content directly to anyone who has the raw URL.
+>
+> Only enable raw access on shares whose content you are comfortable making publicly accessible. Do not enable raw access on password-protected shares unless you explicitly intend the content to be reachable without the password.
+
 ### Via config: `allowed_raw_tokens` and wildcards
 
 One or both of the following arrays in [`config/{raw.}config.php`](#keep-raw-settings-in-a-dedicated-config-file) can be defined. **Config always takes priority over the DB registry.**
@@ -743,12 +748,12 @@ For public endpoints, the app returns a minimal `text/plain` **404 Not found** r
 
 ## Notes & best practices
 
-* Review and update `allowed_raw_tokens` and `allowed_raw_token_wildcards` periodically to align with your security requirements. Alternatively, manage access via the Files sidebar UI per share.
-* Use meaningful share tokens wherever possible for improved manageability.
-* Validate CSP rules and token configurations in a test environment before applying them in production.
-* Prefer `extension` or `path-based` matching for predictable results. `path_contains` with `'/html/'` is usually the safest way to target a folder named `html`.
-* Avoid `script-src 'unsafe-inline'` unless absolutely necessary. When you need inline scripts, prefer nonces or restrictive policies.
-* Keep the `token` selector (in `raw_csp`) only if you want per-share (per-token) policies from config. If you do not need that granularity, it is safe to remove `token` and rely on path/extension/mimetype rules. Per-share CSP can also be set via the UI (stored in DB).
+* **Do not enable raw access on password-protected shares** unless you explicitly intend the content to be publicly reachable without a password. Raw delivery is headless by design — there is no password prompt, so the share password is bypassed entirely.
+* **Review and update `allowed_raw_tokens` and `allowed_raw_token_wildcards` periodically** to align with your security requirements. Alternatively, manage access via the Files sidebar UI per share.
+* **Validate CSP rules and token configurations in a test environment** before applying them in production.
+* **Prefer `extension` or `path-based` matching for predictable results**. `path_contains` with `'/html/'` is usually the safest way to target a folder named `html`.
+* **Avoid `script-src 'unsafe-inline'` unless absolutely necessary**. When you need inline scripts, prefer nonces or restrictive policies.
+* **Keep the `token` selector (in `raw_csp`) only if you want per-share (per-token) policies from config**. If you do not need that granularity, it is safe to remove `token` and rely on path/extension/mimetype rules. Per-share CSP can also be set via the UI (stored in DB).
 * The manager normalizes directives and removes duplicates; unknown directives are ignored (no crash but check logs).
 
 ### Keep `raw` settings in a dedicated config file
