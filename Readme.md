@@ -18,7 +18,7 @@
 
 > [!NOTE]
 > **`files_sharing_raw`** is the actively maintained successor to [`ernolf/raw`](https://github.com/ernolf/raw), which stopped working with Nextcloud 32 due to breaking API changes (`OCP\Share` was removed). `files_sharing_raw` was rebuilt from the ground up to be compatible with Nextcloud 32 and later, while adding a proper database registry, a Files sidebar UI, per-share CSP overrides, webserver offload support, and more.  
-> The longer app ID was chosen deliberately: from the outset, a [pull request to Nextcloud core](https://github.com/nextcloud/server/pull/58648) was planned to register `files_sharing_raw` in the `rootUrlApps` list — which is what enables the short, clean `/raw/{token}` URLs. Until that PR is merged and shipped, the app automatically falls back to longer URLs under `/apps/files_sharing_raw/{token}` (see [URL forms](#url-forms)).
+> The longer app ID was chosen deliberately: from the outset, a [pull request to Nextcloud core](https://github.com/nextcloud/server/pull/58648) was planned to register `files_sharing_raw` in the `rootUrlApps` list — which is what enables the short, clean `/raw/{token}` URLs. That PR has been merged and the change ships with **Nextcloud 32.0.7+ and 33.0.1+**. On older patch releases a one-time manual patch is required (see [Activating root alias URLs](#activating-root-alias-urls-raw)).
 
 ---
 
@@ -806,7 +806,9 @@ The easiest way to install this app is via the Nextcloud App Store:
 
 ### Activating root alias URLs (`/raw/`)
 
-To use the short `/raw/{token}` URLs instead of the longer `/apps/files_sharing_raw/{token}` fallback, `files_sharing_raw` must be registered in Nextcloud core's `rootUrlApps` list. A [pull request has been submitted to Nextcloud core](https://github.com/nextcloud/server/pull/58648) for this. Until it is merged and shipped with a Nextcloud release, the entry must be added manually.
+To use the short `/raw/{token}` URLs instead of the longer `/apps/files_sharing_raw/{token}` fallback, `files_sharing_raw` must be registered in Nextcloud core's `rootUrlApps` list. The [pull request](https://github.com/nextcloud/server/pull/58648) for this has been merged and ships with **Nextcloud 32.0.7+ and 33.0.1+**. On those versions no manual action is needed.
+
+If you are running an older patch release (below 32.0.7 or 33.0.1), the entry must be added once manually.
 
 The change is a single line in `lib/private/AppFramework/Routing/RouteParser.php`:
 
@@ -829,7 +831,8 @@ chmod +x patch-route-parser.sh && ./patch-route-parser.sh
 The script is idempotent — it finds `RouteParser.php` automatically and is safe to run multiple times.
 
 > [!NOTE]
-> This manual step must be repeated after every Nextcloud core update that overwrites `RouteParser.php`. Once the PR is merged, no manual action will be needed.
+> On **Nextcloud 32.0.7+ and 33.0.1+** this manual step is not needed — the entry ships with the core update.
+> On older patch releases, the patch is a one-time action and does not need to be repeated after subsequent Nextcloud updates (those updates will already carry the entry).
 >
 > Without this entry the app still works — it simply uses the longer fallback URLs.
 
