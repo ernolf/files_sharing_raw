@@ -32,7 +32,7 @@ The common usage is to first share a file and enable public access through a lin
 
 A user can also access their own private files. For example, a file named `test.html` in anansi's Documents folder would be available at `https://my-nextcloud/raw/u/anansi/Documents/test.html`.
 </description>
-    <version>0.5.1</version>
+    <version>0.5.2</version>
     <licence>agpl</licence>
     <author mail="raphael.gradenwitz@googlemail.com">[ernolf] - Raphael Gradenwitz</author>
     <namespace>FilesSharingRaw</namespace>

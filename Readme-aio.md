@@ -11,7 +11,7 @@ The short, clean `/raw/{token}` URLs require `files_sharing_raw` to be listed in
 If you are running an older patch release (below 32.0.7 or 33.0.1), the entry needs to be added once manually.
 
 > [!NOTE]
-> Without the patch the app still works — it just uses longer fallback URLs (`/apps/files_sharing_raw/{token}` instead of `/raw/{token}`). Unfortunately, the fallback mode has a known issue that is being worked on and will be fixed in the next point release. **Until then, applying the patch is the only fully working setup.**
+> Without the patch the app still works — it just uses longer fallback URLs (`/apps/files_sharing_raw/{token}` instead of `/raw/{token}`).
 
 ---
 

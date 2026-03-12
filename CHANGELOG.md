@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.5.2 — 2026-03-12
+
+### Added
+- `Readme-aio.md`: step-by-step patch guide for Nextcloud AIO / Docker users; linked from the
+  Installation section of `Readme.md`.
+
+### Fixed
+- Requests to `/apps/files_sharing_raw/{token}` (and `/{token}/{path}`, `/rss`, `/u/{userId}/{path}`)
+  on installations with the `rootUrlApps` patch applied now correctly `307`-redirect to the
+  canonical `/raw/...` or `/rss/...` URL. Previously, these URLs returned Nextcloud's own 404
+  because the routes ceased to exist once the patch was active.
+- `/raw/rss` is now redirected to the canonical `/rss` URL when root aliases are active.
+- `CspManager`: `/rss`-prefixed request paths are now correctly normalized to
+  `/apps/files_sharing_raw/rss/...` before CSP rule matching, consistent with `/raw/...` handling.
+
 ## 0.5.1 — 2026-03-05
 
 ### Added
