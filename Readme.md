@@ -831,6 +831,9 @@ chmod +x patch-route-parser.sh && ./patch-route-parser.sh
 The script is idempotent — it finds `RouteParser.php` automatically and is safe to run multiple times.
 
 > [!NOTE]
+> **Nextcloud AIO / Docker users:** see the [AIO patch guide](Readme-aio.md) for step-by-step instructions on how to apply the patch inside the container.
+
+> [!NOTE]
 > On **Nextcloud 32.0.7+ and 33.0.1+** this manual step is not needed — the entry ships with the core update.
 > On older patch releases, the patch is a one-time action and does not need to be repeated after subsequent Nextcloud updates (those updates will already carry the entry).
 >
