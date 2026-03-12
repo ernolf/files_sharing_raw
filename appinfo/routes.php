@@ -46,8 +46,23 @@ return [
 			)
 		],
 
-		// Note: when files_sharing_raw is NOT listed in rootUrlApps, Nextcloud automatically
-		// registers the root-alias routes above at /apps/files_sharing_raw/... instead of /raw/...
-		// No separate fallback routes are needed.
+		// Legacy routes — always registered at /apps/files_sharing_raw/... (no root parameter).
+		// With root aliases active: these serve as redirect shims (307 → /raw/... or /rss/...).
+		// Without root aliases: the root-alias routes above are registered here automatically,
+		//   so these legacy entries are shadowed and behave identically — harmless duplication.
+		['name' => 'pubPage#legacyByToken', 'url' => '/{token}', 'verb' => 'GET',
+			'requirements' => ['token' => '[A-Za-z0-9-]+']
+		],
+		['name' => 'pubPage#legacyByTokenAndPath', 'url' => '/{token}/{path}', 'verb' => 'GET',
+			'requirements' => ['token' => '[A-Za-z0-9-]+', 'path' => '.+']
+		],
+		['name' => 'pubPage#legacyRss', 'url' => '/rss', 'verb' => 'GET'],
+		['name' => 'pubPage#legacyRssPath', 'url' => '/rss/{path}', 'verb' => 'GET',
+			'requirements' => ['path' => '.*'],
+			'defaults' => ['path' => '']
+		],
+		['name' => 'privatePage#legacyByPath', 'url' => '/u/{userId}/{path}', 'verb' => 'GET',
+			'requirements' => ['userId' => '[^/]+', 'path' => '.+']
+		],
 	]
 ];

@@ -149,8 +149,12 @@ class Application extends App implements IBootstrap {
 			$config = $container->query('OCP\IConfig');
 			/** @var IUserSession $userSession */
 			$userSession = $container->query('OCP\IUserSession');
+			/** @var PublicUrlBuilder $publicUrlBuilder */
+			$publicUrlBuilder = $container->query('PublicUrlBuilder');
+			/** @var IURLGenerator $url */
+			$url = $container->query('OCP\IURLGenerator');
 
-			return new PrivatePageController($appName, $request, $rootFolder, $cspManager, $config, $userSession);
+			return new PrivatePageController($appName, $request, $rootFolder, $cspManager, $config, $userSession, $publicUrlBuilder, $url);
 		});
 
 		$c->registerService('RawShareApiController', function($container) {

@@ -7,6 +7,7 @@
 namespace OCA\FilesSharingRaw\Controller;
 
 use OCA\FilesSharingRaw\Service\CspManager;
+use OCA\FilesSharingRaw\Service\PublicUrlBuilder;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
@@ -15,6 +16,7 @@ use OCP\Files\IRootFolder;
 use OCP\Files\NotFoundException;
 use OCP\IConfig;
 use OCP\IRequest;
+use OCP\IURLGenerator;
 use OCP\IUserSession;
 
 class PrivatePageController extends Controller {
@@ -32,12 +34,21 @@ class PrivatePageController extends Controller {
 	/** @var CspManager */
 	protected $cspManager;
 
+	/** @var PublicUrlBuilder */
+	private $publicUrlBuilder;
+
+	/** @var IURLGenerator */
+	private $url;
+
 	/**
 	 * @param string $appName
 	 * @param IRequest $request
 	 * @param IRootFolder $rootFolder
 	 * @param CspManager $cspManager
+	 * @param IConfig $config
 	 * @param IUserSession $userSession
+	 * @param PublicUrlBuilder $publicUrlBuilder
+	 * @param IURLGenerator $url
 	 */
 	public function __construct(
 		$appName,
@@ -45,13 +56,17 @@ class PrivatePageController extends Controller {
 		IRootFolder $rootFolder,
 		CspManager $cspManager,
 		IConfig $config,
-		IUserSession $userSession
+		IUserSession $userSession,
+		PublicUrlBuilder $publicUrlBuilder,
+		IURLGenerator $url
 	) {
 		parent::__construct($appName, $request);
 
 		$this->rootFolder = $rootFolder;
 		$this->cspManager = $cspManager;
 		$this->config = $config;
+		$this->publicUrlBuilder = $publicUrlBuilder;
+		$this->url = $url;
 
 		// Set loggedInUserId from the user session if available (null if anonymous)
 		// This is safer and more idiomatic than passing the UID into the constructor.
@@ -82,5 +97,27 @@ class PrivatePageController extends Controller {
 			return new NotFoundResponse();
 		}
 		$this->returnRawResponse($node);
+	}
+
+	// Legacy route: /apps/files_sharing_raw/u/{userId}/{path}
+	// With root aliases active: 307 redirect to the canonical /raw/u/{userId}/{path} URL.
+	// Without root aliases: delegate directly to getByPath().
+
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function legacyByPath($userId, $path) {
+		if ($this->publicUrlBuilder->hasRootAliases()) {
+			$canonical = $this->url->linkToRoute(
+				'files_sharing_raw.privatePage.getByPath',
+				['userId' => $userId, 'path' => $path]
+			);
+			$qs = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY);
+			if (is_string($qs) && $qs !== '') {
+				$canonical .= '?' . $qs;
+			}
+			header('Location: ' . $canonical, true, 307);
+			exit;
+		}
+		return $this->getByPath($userId, $path);
 	}
 }

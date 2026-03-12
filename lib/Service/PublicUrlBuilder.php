@@ -63,16 +63,12 @@ class PublicUrlBuilder {
 	}
 
 	public function publicTokenUrl(string $token, string $path = ''): string {
-		// The app requires the /raw/ root alias (files_sharing_raw in rootUrlApps).
-		// Non-root routes were removed in 0.5.0; without the root alias no valid URL exists.
-		if (!$this->hasRootAliases()) {
-			$this->logger->warning(
-				'[files_sharing_raw] publicTokenUrl: no root aliases active, returning empty URL for token={token}',
-				['token' => $token]
-			);
-			return '';
-		}
-
+		// When files_sharing_raw is listed in rootUrlApps (core patch applied), Nextcloud
+		// registers the route at /raw/{token}. Without the patch, it falls back to
+		// /apps/files_sharing_raw/{token}. In both cases linkToRouteAbsolute returns the
+		// correct absolute URL — no guard needed here.
+		// Once root aliases are active, redirectCanonicalIfNeeded() issues a 307 for any
+		// request still arriving via the long /apps/files_sharing_raw/... path.
 		if ($path === '') {
 			return $this->url->linkToRouteAbsolute('files_sharing_raw.pubPage.getByTokenRoot', ['token' => $token]);
 		}

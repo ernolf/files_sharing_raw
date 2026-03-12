@@ -79,7 +79,9 @@ class PubPageController extends Controller {
 		if ($reqPath === null || $reqPath === false) {
 			$reqPath = $uri;
 		}
-		if (strpos((string)$reqPath, '/apps/files_sharing_raw') !== 0) {
+		$isFromApps = strpos((string)$reqPath, '/apps/files_sharing_raw') === 0;
+		$isRssViaRaw = $token === 'rss' && str_contains((string)$reqPath, '/raw/rss');
+		if (!$isFromApps && !$isRssViaRaw) {
 			return;
 		}
 
@@ -212,5 +214,68 @@ class PubPageController extends Controller {
 			return $this->getByTokenRoot('rss');
 		}
 		return $this->getByTokenAndPathRoot('rss', (string)$path);
+	}
+
+	// Legacy routes: /apps/files_sharing_raw/... — always registered regardless of rootUrlApps patch.
+	// When root aliases are active: issue a 307 redirect to the canonical /raw/... URL.
+	// When root aliases are inactive: delegate directly to the corresponding canonical method.
+
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	#[PublicPage]
+	public function legacyByToken($token) {
+		if ($this->publicUrlBuilder->hasRootAliases()) {
+			$target = $this->publicUrlBuilder->rawPath((string)$token);
+			$qs = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY);
+			if (is_string($qs) && $qs !== '') {
+				$target .= '?' . $qs;
+			}
+			header('Location: ' . $target, true, 307);
+			exit;
+		}
+		return $this->getByToken($token);
+	}
+
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	#[PublicPage]
+	public function legacyByTokenAndPath($token, $path) {
+		if ($this->publicUrlBuilder->hasRootAliases()) {
+			$target = $this->publicUrlBuilder->rawPath((string)$token, (string)$path);
+			$qs = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY);
+			if (is_string($qs) && $qs !== '') {
+				$target .= '?' . $qs;
+			}
+			header('Location: ' . $target, true, 307);
+			exit;
+		}
+		return $this->getByTokenAndPath($token, $path);
+	}
+
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	#[PublicPage]
+	public function legacyRss() {
+		if ($this->publicUrlBuilder->hasRootAliases()) {
+			$target = $this->publicUrlBuilder->rssPath('');
+			header('Location: ' . $target, true, 307);
+			exit;
+		}
+		return $this->getByTokenRoot('rss');
+	}
+
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	#[PublicPage]
+	public function legacyRssPath($path = '') {
+		if ($this->publicUrlBuilder->hasRootAliases()) {
+			$target = $this->publicUrlBuilder->rssPath((string)$path);
+			header('Location: ' . $target, true, 307);
+			exit;
+		}
+		if ($path === '' || $path === null) {
+			return $this->getByTokenRoot('rss');
+		}
+		return $this->getByTokenAndPath('rss', (string)$path);
 	}
 }
