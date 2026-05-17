@@ -224,7 +224,7 @@ trait RawResponse {
 		}
 
 		// Common headers (we want identical semantics vs streaming)
-		header("Content-Type: {$mimetype}");
+		header("Content-Type: " . $this->addCharset($mimetype));
 		if ($size !== null) {
 			header('Content-Length: ' . (int)$size);
 		}
@@ -463,7 +463,7 @@ trait RawResponse {
 		// If we are responding to HEAD, do not read the file content.
 		if ($isHead) {
 			$this->emitOffloadDebug('none', 'head_request');
-			header("Content-Type: {$mimetype}");
+			header("Content-Type: " . $this->addCharset($mimetype));
 			if ($size !== null) {
 				header('Content-Length: ' . (int)$size);
 			}
@@ -485,7 +485,7 @@ trait RawResponse {
 			$mimetype = $this->getMimeType($fileNode, $content);
 			$etag = '"' . md5($content) . '"';
 
-			header("Content-Type: {$mimetype}");
+			header("Content-Type: " . $this->addCharset($mimetype));
 			header('Content-Length: ' . ($size !== null ? (int)$size : strlen($content)));
 			header('ETag: ' . $etag);
 			if ($lastModifiedHeader !== null) {
@@ -537,7 +537,7 @@ trait RawResponse {
 			$content = $fileNode->getContent();
 			$mimetype = $this->getMimeType($fileNode, $content);
 
-			header("Content-Type: {$mimetype}");
+			header("Content-Type: " . $this->addCharset($mimetype));
 			header('Content-Length: ' . ($size !== null ? (int)$size : strlen($content)));
 			header('ETag: ' . $etag);
 			if ($lastModifiedHeader !== null) {
@@ -569,7 +569,7 @@ trait RawResponse {
 		}
 
 		// --- Send headers ---
-		header("Content-Type: {$mimetype}");
+		header("Content-Type: " . $this->addCharset($mimetype));
 		if ($size !== null) {
 			header('Content-Length: ' . (int)$size);
 		}
@@ -605,5 +605,19 @@ trait RawResponse {
 		}
 		fclose($stream);
 		exit;
+	}
+
+	/**
+	 * Append '; charset=utf-8' to text/* and XML MIME types.
+	 * Binary types are returned unchanged.
+	 */
+	protected function addCharset(string $mimetype): string {
+		if (strncmp($mimetype, 'text/', 5) === 0
+			|| $mimetype === 'application/xml'
+			|| substr($mimetype, -4) === '+xml'
+		) {
+			return $mimetype . '; charset=utf-8';
+		}
+		return $mimetype;
 	}
 }

@@ -1,6 +1,19 @@
 # Changelog
 
-## 0.5.2 — 2026-03-12
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.5.3] - 2026-05-17
+
+### Fixed
+- `Content-Type` response header now includes `; charset=utf-8` for `text/*` and
+  XML-based MIME types (`application/xml`, `*+xml`). Previously, RSS feeds and other
+  XML files were served without a charset declaration, causing W3C validators and some
+  clients to misinterpret the encoding.
+
+## [0.5.2] - 2026-03-12
 
 ### Added
 - `Readme-aio.md`: step-by-step patch guide for Nextcloud AIO / Docker users; linked from the
@@ -15,7 +28,7 @@
 - `CspManager`: `/rss`-prefixed request paths are now correctly normalized to
   `/apps/files_sharing_raw/rss/...` before CSP rule matching, consistent with `/raw/...` handling.
 
-## 0.5.1 — 2026-03-05
+## [0.5.1] - 2026-03-05
 
 ### Added
 - Admin setup check (Settings → Administration → Overview): warns when
@@ -33,7 +46,7 @@
 - Readme: Installation and Updating sections restructured; webserver offload
   security warning added; table of contents completed.
 
-## 0.5.0 — 2026-03-03
+## [0.5.0] - 2026-03-03
 
 ### Breaking Changes
 - **App renamed** from `raw` to `files_sharing_raw`; PHP namespace from `OCA\Raw`
@@ -75,7 +88,7 @@
 - **CSP editor group restriction**: the **Edit CSP** option in the sidebar
   three-dot menu is only visible to members of a configurable group
   (default: `admin`). Users outside the group cannot change a share's CSP via
-  the API — existing values are silently preserved. Configure via:
+  the API - existing values are silently preserved. Configure via:
   ```
   occ config:app:set files_sharing_raw csp_editor_group --value="raw_csp_allowed"
   ```
@@ -98,7 +111,7 @@
   throwing an exception; dead wrapper methods removed.
 - Readme restructured into feature-oriented chapters.
 
-## 0.4.1
+## [0.4.1]
 ### Added
 - Root aliases: /raw/{token}, /raw/{token}/{path}, and /rss shortcuts (requires rootUrlApps allowlist).
 - Optional webserver offload helpers (Apache X-Sendfile / Nginx X-Accel-Redirect).
@@ -111,7 +124,7 @@
 ### Fixed
 - MIME detection avoids forcing content reads when not needed.
 
-## 0.4.0
+## [0.4.0]
 ### Added
 - README overhaul:
   - Added “Design goals”, “Table of contents”, “Quickstart”, and a structured “HTTP behavior & performance” section.
@@ -145,7 +158,7 @@
 ### Notes
 - This release is heavily documentation-focused (large README rewrite) plus a behavioral change for public errors (plaintext 404) and small performance improvements around MIME sniffing.
 
-## 0.3.1
+## [0.3.1]
 ### Added
 - `appinfo/info.xml`: Explicitly documents that CSP is configurable via `raw_csp` (per token/path/extension/mimetype, with hard-coded fallback).
 - App dependency requirements updated:
@@ -173,7 +186,7 @@
 ### Documentation
 - README formatting polish
 
-## 0.3.0
+## [0.3.0]
 ### Added
 - Configurable Content-Security-Policy support via Nextcloud system config key `raw_csp`, with selector-based matching:
   - `token` (public share token, exact match)
@@ -204,7 +217,7 @@
   - added documentation for ETag / Last-Modified conditional requests and cookie behavior
 - `appinfo/info.xml` description extended with a short “Caching and conditional requests” section and CSP link placement cleanup.
 
-## 0.2.0
+## [0.2.0]
 ### Added
 - Token allowlist for public raw access via Nextcloud system config:
   - `allowed_raw_tokens` (exact matches)
@@ -221,7 +234,7 @@
 - README clarifies which URL forms work (and that private /u/... cannot omit /u/).
 - Added reference to the optional “human-readable share tokens” helper app (`cfg_share_links`).
 
-## 0.1.1
+## [0.1.1]
 ### Added
 - Directory handling: when a shared path points to a folder, raw now tries to serve index.html from that folder (and otherwise returns a plain 404).
 ### Changed
@@ -232,7 +245,7 @@
 ### Documentation
 - Installation instructions were clarified with an explicit git clone example and a short “enable in Apps” step.
 
-## 0.1.0
+## [0.1.0]
 ### Added
 - Initial release (forked from `gerben/nextcloud-raw` on Codeberg).
 
