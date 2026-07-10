@@ -2,7 +2,6 @@
  * SPDX-FileCopyrightText: 2024-2026 [ernolf] Raphael Gradenwitz
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
-/* global customElements */
 
 import { registerSidebarAction } from '@nextcloud/sharing/ui'
 import { createApp, h, reactive } from 'vue'
@@ -39,7 +38,9 @@ if (typeof customElements !== 'undefined' && !customElements.get(ELEMENT_NAME)) 
 				this._saveHookInstalled = true
 				try {
 					v(async () => await this.save())
-				} catch (e) {}
+				} catch {
+					// the registrar may throw before files_sharing is ready
+				}
 			}
 		}
 
@@ -50,13 +51,19 @@ if (typeof customElements !== 'undefined' && !customElements.get(ELEMENT_NAME)) 
 		}
 
 		disconnectedCallback() {
-			try { this._app?.unmount() } catch (e) {}
+			try {
+				this._app?.unmount()
+			} catch {
+				// already unmounted
+			}
 			this._app = null
 			this._vm = null
 		}
 
 		_mount() {
-			if (this._app) { return }
+			if (this._app) {
+				return
+			}
 			this._app = createApp({
 				render: () => h(RawSharingAction, {
 					node: this._state.node,
@@ -92,10 +99,14 @@ if (!window.__filesSharingRawSidebarActionRegistered) {
 
 		enabled(share) {
 			const token = share?.token ?? share?.shareToken ?? share?.share_token
-			if (!token) { return false }
+			if (!token) {
+				return false
+			}
 
 			const t = share?.shareType ?? share?.share_type ?? share?.type
-			if (t == null) { return true }
+			if (t === null || t === undefined) {
+				return true
+			}
 			return Number(t) === 3
 		},
 	})

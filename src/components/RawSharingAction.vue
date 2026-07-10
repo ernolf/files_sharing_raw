@@ -29,7 +29,7 @@
 
 						<div class="sharing-entry__actions">
 							<!-- Copy button -->
-							<NcActions ref="copyButton" class="sharing-entry__copy">
+							<NcActions class="sharing-entry__copy">
 								<NcActionButton
 									:aria-label="t('files_sharing_raw', 'Copy raw link to clipboard')"
 									:title="copySuccess ? t('files_sharing_raw', 'Successfully copied raw link') : undefined"
@@ -131,11 +131,10 @@
 </template>
 
 <script setup>
-/* global OC */
-
 import { mdiCheck, mdiContentCopy } from '@mdi/js'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { t } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
 import { computed, defineExpose, onMounted, ref, watch } from 'vue'
 import NcActionButton from '@nextcloud/vue/components/NcActionButton'
 import NcActionCheckbox from '@nextcloud/vue/components/NcActionCheckbox'
@@ -152,6 +151,8 @@ import CloseIcon from 'vue-material-design-icons/Close.vue'
 import Tune from 'vue-material-design-icons/Tune.vue'
 
 const props = defineProps({
+	// part of the sidebar-action element contract, currently unused in the template
+	// eslint-disable-next-line vue/no-unused-properties
 	node: { type: Object, required: true },
 	share: { type: Object, required: false, default: undefined },
 	onSave: { type: Function, required: false, default: undefined },
@@ -204,11 +205,11 @@ const canEditCsp = ref(false)
 const cspInput = ref('')
 const savingCsp = ref(false)
 
-const cspInputId = computed(() => `rawAction-csp-${shareId.value}`)
-
 // Derive the active preset id from the current cspInput value.
 const selectedPresetId = computed(() => {
-	if (cspInput.value === '') { return 'server_default' }
+	if (cspInput.value === '') {
+		return 'server_default'
+	}
 	const match = CSP_PRESETS.find((p) => p.csp !== null && p.csp === cspInput.value)
 	return match ? match.id : 'custom'
 })
@@ -216,12 +217,13 @@ const selectedPresetId = computed(() => {
 // --- helpers ---
 
 /**
+ * Log a debug message. Enable via DevTools: window.__filesSharingRawDebug = true
  *
- * @param {...any} args
+ * @param {...unknown} args the message parts
  */
 function dbg(...args) {
-	// Enable via DevTools: window.__filesSharingRawDebug = true
 	if (window.__filesSharingRawDebug) {
+		// eslint-disable-next-line no-console
 		console.log('[files_sharing_raw]', ...args)
 	}
 }
@@ -236,6 +238,8 @@ const shareId = computed(() => {
 	return Number.isFinite(n) ? n : 0
 })
 
+const cspInputId = computed(() => `rawAction-csp-${shareId.value}`)
+
 /**
  *
  */
@@ -247,20 +251,24 @@ function reqToken() {
 
 // Apply a CSP preset: fill the text field, leave it unchanged for "custom".
 /**
+ * Apply a CSP preset to the text field.
  *
- * @param event
+ * @param {Event} event the select change event
  */
 function onPresetChange(event) {
 	const presetId = event.target.value
 	const preset = CSP_PRESETS.find((p) => p.id === presetId)
-	if (!preset || preset.csp === null) { return } // "custom" — keep existing text
+	if (!preset || preset.csp === null) {
+		return // "custom" — keep existing text
+	}
 	cspInput.value = preset.csp
 }
 
 // Toggle rawOnly and immediately persist.
 /**
+ * Toggle rawOnly and immediately persist.
  *
- * @param val
+ * @param {boolean} val the new checkbox state
  */
 function onRawOnlyChange(val) {
 	rawOnly.value = val
@@ -273,8 +281,10 @@ function onRawOnlyChange(val) {
  *
  */
 async function loadStateFromBackend() {
-	if (!shareId.value || loadedOnce.value) { return }
-	const url = OC.generateUrl('/apps/files_sharing_raw/api/v1/raw-share/' + shareId.value)
+	if (!shareId.value || loadedOnce.value) {
+		return
+	}
+	const url = generateUrl('/apps/files_sharing_raw/api/v1/raw-share/' + shareId.value)
 	dbg('GET state', { shareId: shareId.value, url })
 	const res = await fetch(url, {
 		method: 'GET',
@@ -284,9 +294,13 @@ async function loadStateFromBackend() {
 			requesttoken: reqToken(),
 		},
 	})
-	if (!res.ok) { return }
+	if (!res.ok) {
+		return
+	}
 	const data = await res.json().catch(() => null)
-	if (!data) { return }
+	if (!data) {
+		return
+	}
 
 	enabled.value = !!data.enabled
 	rawOnly.value = !!data.rawOnly
@@ -306,7 +320,7 @@ async function save() {
 		showError(t('files_sharing_raw', 'No share id found.'))
 		return
 	}
-	const url = OC.generateUrl('/apps/files_sharing_raw/api/v1/raw-share/' + shareId.value)
+	const url = generateUrl('/apps/files_sharing_raw/api/v1/raw-share/' + shareId.value)
 	dbg('POST save', { shareId: shareId.value, enabled: enabled.value, rawOnly: rawOnly.value })
 
 	const body = new URLSearchParams()
@@ -325,7 +339,7 @@ async function save() {
 	if (!res.ok) {
 		const ct = res.headers.get('content-type') || ''
 		const txt = await res.text().catch(() => '')
-		console.log('[files_sharing_raw] POST failed', {
+		dbg('POST failed', {
 			status: res.status,
 			contentType: ct,
 			body: txt.slice(0, 2000),
@@ -345,9 +359,11 @@ async function save() {
  *
  */
 async function saveCsp() {
-	if (!shareId.value) { return }
+	if (!shareId.value) {
+		return
+	}
 	savingCsp.value = true
-	const url = OC.generateUrl('/apps/files_sharing_raw/api/v1/raw-share/' + shareId.value)
+	const url = generateUrl('/apps/files_sharing_raw/api/v1/raw-share/' + shareId.value)
 
 	const body = new URLSearchParams()
 	body.set('enabled', enabled.value ? '1' : '0')
@@ -388,7 +404,9 @@ async function copyRawLink() {
 		)
 	} finally {
 		copySuccess.value = true
-		setTimeout(() => { copySuccess.value = false }, 4000)
+		setTimeout(() => {
+			copySuccess.value = false
+		}, 4000)
 	}
 }
 
@@ -410,13 +428,21 @@ defineExpose({ save })
 watch(
 	() => props.onSave,
 	(fn) => {
-		if (typeof fn !== 'function') { return }
-		if (saveRegistrar.value === fn) { return }
+		if (typeof fn !== 'function') {
+			return
+		}
+		if (saveRegistrar.value === fn) {
+			return
+		}
 		saveRegistrar.value = fn
 		dbg('onSave registrar set', { shareId: shareId.value })
 		try {
-			fn(async () => { await save() })
-		} catch (e) {}
+			fn(async () => {
+				await save()
+			})
+		} catch {
+			// the registrar may throw before files_sharing is ready
+		}
 	},
 	{ immediate: true },
 )
