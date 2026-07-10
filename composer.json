@@ -1,0 +1,32 @@
+{
+	"name": "ernolf/files_sharing_raw",
+	"description": "Serves files raw on the World Wide Web: link directly to file contents without any of Nextcloud's UI.",
+	"type": "nextcloud-app",
+	"version": "0.5.3",
+	"license": "AGPL-3.0-or-later",
+	"authors": [
+		{
+			"name": "[ernolf] Raphael Gradenwitz",
+			"email": "raphael.gradenwitz@googlemail.com"
+		}
+	],
+	"config": {
+		"platform": {
+			"php": "8.1"
+		},
+		"sort-packages": true,
+		"optimize-autoloader": true,
+		"autoloader-suffix": "FilesSharingRaw"
+	},
+	"autoload": {
+		"psr-4": {
+			"OCA\\FilesSharingRaw\\": "lib/"
+		}
+	},
+	"scripts": {
+		"lint": "find . -name \\*.php -not -path './vendor/*' -not -path './vendor-bin/*' -not -path './node_modules/*' -print0 | xargs -0 -n1 php -l"
+	},
+	"require": {
+		"php": ">=8.1"
+	}
+}
