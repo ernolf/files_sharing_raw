@@ -134,7 +134,7 @@ class RawShareApiController extends Controller {
 		if ($user === null) {
 			return new DataResponse(['error' => 'not_authenticated'], 401);
 		}
-		$uid = (string)$user->getUID();
+		$uid = $user->getUID();
 
 		// Resolve the node within the current user's view (mounts included).
 		try {
@@ -163,7 +163,7 @@ class RawShareApiController extends Controller {
 				if ($share->getShareType() !== IShare::TYPE_LINK) {
 					continue;
 				}
-				$shareId = $this->normalizeShareId((string)$share->getId());
+				$shareId = $this->normalizeShareId($share->getId());
 				if ($shareId <= 0) {
 					continue;
 				}
@@ -198,7 +198,7 @@ class RawShareApiController extends Controller {
 		if ($user === null) {
 			return null;
 		}
-		$uid = (string)$user->getUID();
+		$uid = $user->getUID();
 
 		try {
 			// Nextcloud internal shares are addressed as "<provider>:<id>" (usually "ocinternal:<id>")

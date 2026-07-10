@@ -15,6 +15,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
+use OCP\Files\Folder;
 use OCP\Files\NotFoundException;
 use OCP\IConfig;
 use OCP\IRequest;
@@ -35,7 +36,7 @@ class PubPageController extends Controller {
 	/** @var RawShareRegistry */
 	private $rawRegistry;
 
-	private function plainNotFound() {
+	private function plainNotFound(): never {
 		if (session_status() === PHP_SESSION_ACTIVE) {
 			session_write_close();
 			ini_set('session.use_cookies', 0);
@@ -141,10 +142,10 @@ class PubPageController extends Controller {
 			if ($share->getShareType() !== IShare::TYPE_LINK) {
 				$this->plainNotFound();
 			}
-			if (!$this->isAllowedShare($share, (string)$token)) {
+			if (!$this->isAllowedShare($share, $token)) {
 				$this->plainNotFound();
 			}
-			$this->redirectCanonicalIfNeeded((string)$token, null);
+			$this->redirectCanonicalIfNeeded($token, null);
 			$node = $share->getNode();
 		} catch (\Throwable $e) {
 			$this->plainNotFound();
@@ -169,15 +170,15 @@ class PubPageController extends Controller {
 			if ($share->getShareType() !== IShare::TYPE_LINK) {
 				$this->plainNotFound();
 			}
-			if (!$this->isAllowedShare($share, (string)$token)) {
+			if (!$this->isAllowedShare($share, $token)) {
 				$this->plainNotFound();
 			}
-			$this->redirectCanonicalIfNeeded((string)$token, (string)$path);
+			$this->redirectCanonicalIfNeeded($token, (string)$path);
 			$dirNode = $share->getNode();
 		} catch (\Throwable $e) {
 			$this->plainNotFound();
 		}
-		if ($dirNode->getType() !== 'dir') {
+		if (!($dirNode instanceof Folder)) {
 			// Do not leak details; behave like a plain raw miss.
 			$this->plainNotFound();
 		}
