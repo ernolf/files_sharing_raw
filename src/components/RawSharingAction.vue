@@ -596,6 +596,10 @@ watch(enabled, (val) => {
 	min-width: 0;
 }
 
+.rawAction__csp-row :deep(.button-vue) {
+	flex-shrink: 0;
+}
+
 .rawAction__csp-hint {
 	font-size: 0.8em;
 	color: var(--color-text-maxcontrast);
