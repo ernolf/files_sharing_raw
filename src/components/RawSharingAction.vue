@@ -14,12 +14,11 @@
 		<transition name="raw-link-fade">
 			<ul v-if="enabled && rawUrl" class="rawAction__link-list">
 				<li class="sharing-entry sharing-entry__link rawAction__link-entry">
-
 					<!-- Avatar: identical style to SharingEntryLink -->
 					<NcAvatar
 						class="sharing-entry__avatar"
-						:is-no-user="true"
-						icon-class="avatar-link-share icon-public-white" />
+						:isNoUser="true"
+						iconClass="avatar-link-share icon-public-white" />
 
 					<div class="sharing-entry__summary">
 						<div class="sharing-entry__desc">
@@ -47,12 +46,11 @@
 
 							<!-- Three-dot menu -->
 							<NcActions
-								menu-align="right"
+								menuAlign="right"
 								:aria-label="t('files_sharing_raw', 'Raw link options')">
-
 								<NcActionButton
 									v-if="canEditCsp"
-									:close-after-click="true"
+									:closeAfterClick="true"
 									@click.prevent="showCspEditor = !showCspEditor">
 									<template #icon>
 										<Tune :size="20" />
@@ -61,8 +59,8 @@
 								</NcActionButton>
 
 								<NcActionCheckbox
-									:model-value="rawOnly"
-									@update:model-value="onRawOnlyChange">
+									:modelValue="rawOnly"
+									@update:modelValue="onRawOnlyChange">
 									{{ t('files_sharing_raw', 'Raw only') }}
 								</NcActionCheckbox>
 
@@ -110,10 +108,10 @@
 								v-model="cspInput"
 								:placeholder="t('files_sharing_raw', 'Leave empty for server default')"
 								:label="t('files_sharing_raw', 'Custom CSP')"
-								:label-visible="false" />
+								:labelVisible="false" />
 							<NcButton
 								:disabled="savingCsp"
-								type="primary"
+								variant="primary"
 								@click="saveCsp">
 								<template #icon>
 									<NcLoadingIcon v-if="savingCsp" :size="20" />
@@ -135,13 +133,13 @@
 <script setup>
 /* global OC */
 
-import { computed, defineExpose, onMounted, ref, watch } from 'vue'
+import { mdiCheck, mdiContentCopy } from '@mdi/js'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { t } from '@nextcloud/l10n'
-import { mdiCheck, mdiContentCopy } from '@mdi/js'
-import NcActions from '@nextcloud/vue/components/NcActions'
+import { computed, defineExpose, onMounted, ref, watch } from 'vue'
 import NcActionButton from '@nextcloud/vue/components/NcActionButton'
 import NcActionCheckbox from '@nextcloud/vue/components/NcActionCheckbox'
+import NcActions from '@nextcloud/vue/components/NcActions'
 import NcActionSeparator from '@nextcloud/vue/components/NcActionSeparator'
 import NcAvatar from '@nextcloud/vue/components/NcAvatar'
 import NcButton from '@nextcloud/vue/components/NcButton'
@@ -210,13 +208,17 @@ const cspInputId = computed(() => `rawAction-csp-${shareId.value}`)
 
 // Derive the active preset id from the current cspInput value.
 const selectedPresetId = computed(() => {
-	if (cspInput.value === '') return 'server_default'
-	const match = CSP_PRESETS.find(p => p.csp !== null && p.csp === cspInput.value)
+	if (cspInput.value === '') { return 'server_default' }
+	const match = CSP_PRESETS.find((p) => p.csp !== null && p.csp === cspInput.value)
 	return match ? match.id : 'custom'
 })
 
 // --- helpers ---
 
+/**
+ *
+ * @param {...any} args
+ */
 function dbg(...args) {
 	// Enable via DevTools: window.__filesSharingRawDebug = true
 	if (window.__filesSharingRawDebug) {
@@ -234,6 +236,9 @@ const shareId = computed(() => {
 	return Number.isFinite(n) ? n : 0
 })
 
+/**
+ *
+ */
 function reqToken() {
 	return OC?.requestToken
 		|| document.querySelector('meta[name="requesttoken"]')?.getAttribute('content')
@@ -241,14 +246,22 @@ function reqToken() {
 }
 
 // Apply a CSP preset: fill the text field, leave it unchanged for "custom".
+/**
+ *
+ * @param event
+ */
 function onPresetChange(event) {
 	const presetId = event.target.value
-	const preset = CSP_PRESETS.find(p => p.id === presetId)
-	if (!preset || preset.csp === null) return // "custom" — keep existing text
+	const preset = CSP_PRESETS.find((p) => p.id === presetId)
+	if (!preset || preset.csp === null) { return } // "custom" — keep existing text
 	cspInput.value = preset.csp
 }
 
 // Toggle rawOnly and immediately persist.
+/**
+ *
+ * @param val
+ */
 function onRawOnlyChange(val) {
 	rawOnly.value = val
 	save()
@@ -256,8 +269,11 @@ function onRawOnlyChange(val) {
 
 // --- backend calls ---
 
+/**
+ *
+ */
 async function loadStateFromBackend() {
-	if (!shareId.value || loadedOnce.value) return
+	if (!shareId.value || loadedOnce.value) { return }
 	const url = OC.generateUrl('/apps/files_sharing_raw/api/v1/raw-share/' + shareId.value)
 	dbg('GET state', { shareId: shareId.value, url })
 	const res = await fetch(url, {
@@ -268,9 +284,9 @@ async function loadStateFromBackend() {
 			requesttoken: reqToken(),
 		},
 	})
-	if (!res.ok) return
+	if (!res.ok) { return }
 	const data = await res.json().catch(() => null)
-	if (!data) return
+	if (!data) { return }
 
 	enabled.value = !!data.enabled
 	rawOnly.value = !!data.rawOnly
@@ -282,6 +298,9 @@ async function loadStateFromBackend() {
 	dbg('state loaded', { enabled: enabled.value, rawOnly: rawOnly.value, rawUrl: rawUrl.value, csp: cspInput.value })
 }
 
+/**
+ *
+ */
 async function save() {
 	if (!shareId.value) {
 		showError(t('files_sharing_raw', 'No share id found.'))
@@ -322,8 +341,11 @@ async function save() {
 	dbg('POST ok', { rawUrl: rawUrl.value })
 }
 
+/**
+ *
+ */
 async function saveCsp() {
-	if (!shareId.value) return
+	if (!shareId.value) { return }
 	savingCsp.value = true
 	const url = OC.generateUrl('/apps/files_sharing_raw/api/v1/raw-share/' + shareId.value)
 
@@ -351,6 +373,9 @@ async function saveCsp() {
 	dbg('CSP saved', { csp: cspInput.value })
 }
 
+/**
+ *
+ */
 async function copyRawLink() {
 	try {
 		await navigator.clipboard.writeText(rawUrl.value)
@@ -367,6 +392,9 @@ async function copyRawLink() {
 	}
 }
 
+/**
+ *
+ */
 function disableRaw() {
 	enabled.value = false
 	rawUrl.value = ''
@@ -382,8 +410,8 @@ defineExpose({ save })
 watch(
 	() => props.onSave,
 	(fn) => {
-		if (typeof fn !== 'function') return
-		if (saveRegistrar.value === fn) return
+		if (typeof fn !== 'function') { return }
+		if (saveRegistrar.value === fn) { return }
 		saveRegistrar.value = fn
 		dbg('onSave registrar set', { shareId: shareId.value })
 		try {
@@ -482,7 +510,6 @@ watch(enabled, (val) => {
 .rawAction__link-entry .sharing-entry__copy-icon--success {
 	color: var(--color-success);
 }
-
 
 /* --- CSP editor panel --- */
 .rawAction__csp-editor {

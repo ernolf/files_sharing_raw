@@ -42,6 +42,7 @@ if (typeof customElements !== 'undefined' && !customElements.get(ELEMENT_NAME)) 
 				} catch (e) {}
 			}
 		}
+
 		get onSave() { return this._state.onSave }
 
 		connectedCallback() {
@@ -55,7 +56,7 @@ if (typeof customElements !== 'undefined' && !customElements.get(ELEMENT_NAME)) 
 		}
 
 		_mount() {
-			if (this._app) return
+			if (this._app) { return }
 			this._app = createApp({
 				render: () => h(RawSharingAction, {
 					node: this._state.node,
@@ -91,10 +92,10 @@ if (!window.__filesSharingRawSidebarActionRegistered) {
 
 		enabled(share) {
 			const token = share?.token ?? share?.shareToken ?? share?.share_token
-			if (!token) return false
+			if (!token) { return false }
 
 			const t = share?.shareType ?? share?.share_type ?? share?.type
-			if (t == null) return true
+			if (t == null) { return true }
 			return Number(t) === 3
 		},
 	})
