@@ -18,6 +18,7 @@
 		"@nextcloud/eslint-config": "^9.0.0",
 		"@nextcloud/stylelint-config": "^3.2.2",
 		"@nextcloud/webpack-vue-config": "^7.0.2",
+		"@noble/hashes": "^2.2.0",
 		"@vitejs/plugin-vue": "^6.0.0",
 		"@vue/test-utils": "^2.4.6",
 		"jsdom": "^29.1.1",
