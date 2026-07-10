@@ -9,6 +9,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-07-10
+
+### Changed
+
+- **BREAKING** The patch era is over: Nextcloud core grants `files_sharing_raw` its root routes since **32.0.7 / 33.0.1**, so the manual `RouteParser.php` patch is no longer needed nor supported. On older cores the app keeps working with the longer `/apps/files_sharing_raw/…` fallback URLs, and a setup check reports when the root aliases are inactive.
+- The supported range is now Nextcloud 32–35 on PHP 8.1–8.5.
+- Internal modernization: the build moved to [ncmake](https://github.com/ernolf/ncmake), the licensing is REUSE compliant, and every change now passes CI gates (php-lint, coding standard, psalm, eslint, stylelint, phpunit, vitest) backed by first unit test suites.
+
+### Fixed
+
+- The CSP save button in the Files sidebar is no longer squeezed to an unreadable width.
+- The "Enable raw link" toggle icon now matches the size of the native share toggles.
+- The share-update listener was registered for an event that does not exist in OCP and never fired; the dead code was removed.
+
+### Removed
+
+- `patch-route-parser.sh` and the AIO patch guide (`Readme-aio.md`) — obsolete since the core ships the root route grant.
+
+[0.6.0]: https://github.com/ernolf/files_sharing_raw/releases/tag/v0.6.0
+
 ## [0.5.3] - 2026-05-17
 
 ### Fixed
