@@ -81,16 +81,16 @@ class PubPageController extends Controller {
 		if ($reqPath === null || $reqPath === false) {
 			$reqPath = $uri;
 		}
-		$isFromApps = strpos((string)$reqPath, '/apps/files_sharing_raw') === 0;
-		$isRssViaRaw = $token === 'rss' && str_contains((string)$reqPath, '/raw/rss');
+		$isFromApps = strpos($reqPath, '/apps/files_sharing_raw') === 0;
+		$isRssViaRaw = $token === 'rss' && str_contains($reqPath, '/raw/rss');
 		if (!$isFromApps && !$isRssViaRaw) {
 			return;
 		}
 
 		if ($token === 'rss') {
-			$target = $this->publicUrlBuilder->rssPath((string)($path ?? ''));
+			$target = $this->publicUrlBuilder->rssPath($path ?? '');
 		} else {
-			$target = $this->publicUrlBuilder->rawPath($token, (string)($path ?? ''));
+			$target = $this->publicUrlBuilder->rawPath($token, $path ?? '');
 		}
 		$qs = parse_url($uri, PHP_URL_QUERY);
 		if (is_string($qs) && $qs !== '') {

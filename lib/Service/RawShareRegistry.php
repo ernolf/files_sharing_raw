@@ -59,7 +59,7 @@ class RawShareRegistry {
 	}
 
 	public function enable(int $shareId, ?string $csp, bool $rawOnly = false): RawShare {
-		$now = (int)$this->time->getTime();
+		$now = $this->time->getTime();
 		$csp = $this->normalizeCsp($csp);
 		return $this->mapper->upsert($shareId, true, $csp, $now, $rawOnly);
 	}
@@ -72,7 +72,7 @@ class RawShareRegistry {
 			return;
 		}
 
-		$now = (int)$this->time->getTime();
+		$now = $this->time->getTime();
 		$this->mapper->upsert($shareId, false, $existing->getCsp(), $now, $existing->isRawOnly());
 	}
 

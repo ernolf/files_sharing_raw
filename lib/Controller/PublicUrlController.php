@@ -24,8 +24,7 @@ class PublicUrlController extends Controller {
 
 	#[NoAdminRequired]
 	public function getTokenUrl(string $token = '', string $path = ''): DataResponse {
-		$token = trim((string)$token);
-		$path = (string)$path;
+		$token = trim($token);
 
 		if ($token === '') {
 			return new DataResponse(['ok' => false, 'error' => 'missing token'], 400);

@@ -12,6 +12,9 @@ use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\Share\Events\ShareDeletedEvent;
 
+/**
+ * @template-implements IEventListener<ShareDeletedEvent>
+ */
 class ShareDeletedListener implements IEventListener {
 	private RawShareRegistry $registry;
 

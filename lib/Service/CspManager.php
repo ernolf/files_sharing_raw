@@ -67,7 +67,7 @@ class CspManager {
 
 		// Read admin-provided raw_csp from Nextcloud system config (always read fresh)
 		$rawCsp = (array)$this->configService->getSystemValue('raw_csp', []);
-		if (!is_array($rawCsp) || count($rawCsp) === 0) {
+		if (count($rawCsp) === 0) {
 			return $hardFallback;
 		}
 
@@ -328,7 +328,6 @@ class CspManager {
 	 */
 	public function sanitizeCspString($csp) {
 		$csp = preg_replace('/[\x00-\x1F\x7F]+/', ' ', (string)$csp);
-		$csp = preg_replace('/\s{2,}/', ' ', trim($csp));
-		return $csp;
+		return (string)preg_replace('/\s{2,}/', ' ', trim((string)$csp));
 	}
 }

@@ -14,7 +14,6 @@ use OCA\FilesSharingRaw\Controller\RawShareApiController;
 use OCA\FilesSharingRaw\Db\RawShareMapper;
 use OCA\FilesSharingRaw\Listener\FilesLoadAdditionalScriptsListener;
 use OCA\FilesSharingRaw\Listener\ShareDeletedListener;
-use OCA\FilesSharingRaw\Listener\ShareUpdatedListener;
 use OCA\FilesSharingRaw\Middleware\ShareRawOnlyMiddleware;
 use OCA\FilesSharingRaw\Service\CspManager;
 use OCA\FilesSharingRaw\Service\PublicUrlBuilder;
@@ -32,7 +31,6 @@ use OCP\IRequest;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
 use OCP\Share\Events\ShareDeletedEvent;
-use OCP\Share\Events\ShareUpdatedEvent;
 use OCP\Share\IManager;
 use Psr\Log\LoggerInterface;
 
@@ -56,7 +54,6 @@ class Application extends App implements IBootstrap {
 
 		// Cleanup / consistency
 		$context->registerEventListener(ShareDeletedEvent::class, ShareDeletedListener::class);
-		$context->registerEventListener(ShareUpdatedEvent::class, ShareUpdatedListener::class);
 
 		// Global middleware: block /s/{token} when raw_only is set
 		$context->registerMiddleware(ShareRawOnlyMiddleware::class, true);

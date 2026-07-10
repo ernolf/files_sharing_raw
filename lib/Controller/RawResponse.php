@@ -62,7 +62,7 @@ trait RawResponse {
 		if ($path === null || $path === false) {
 			$path = $uri;
 		}
-		return (bool)preg_match('#^(/raw|/apps/files_sharing_raw)/u/#', (string)$path);
+		return (bool)preg_match('#^(/raw|/apps/files_sharing_raw)/u/#', $path);
 	}
 
 	/**
@@ -81,12 +81,10 @@ trait RawResponse {
 		$publicSIE = 86400;
 		$privateNoStore = false;
 
-		if (isset($this->config) && $this->config instanceof IConfig) {
-			$publicMaxAge = (int)$this->config->getSystemValue('raw_cache_public_max_age', $publicMaxAge);
-			$publicSWR = (int)$this->config->getSystemValue('raw_cache_public_stale_while_revalidate', $publicSWR);
-			$publicSIE = (int)$this->config->getSystemValue('raw_cache_public_stale_if_error', $publicSIE);
-			$privateNoStore = (bool)$this->config->getSystemValue('raw_cache_private_no_store', $privateNoStore);
-		}
+		$publicMaxAge = (int)$this->config->getSystemValue('raw_cache_public_max_age', $publicMaxAge);
+		$publicSWR = (int)$this->config->getSystemValue('raw_cache_public_stale_while_revalidate', $publicSWR);
+		$publicSIE = (int)$this->config->getSystemValue('raw_cache_public_stale_if_error', $publicSIE);
+		$privateNoStore = (bool)$this->config->getSystemValue('raw_cache_private_no_store', $privateNoStore);
 
 		$publicMaxAge = max(0, $publicMaxAge);
 		$publicSWR = max(0, $publicSWR);
@@ -228,7 +226,7 @@ trait RawResponse {
 		// Common headers (we want identical semantics vs streaming)
 		header('Content-Type: ' . $this->addCharset($mimetype));
 		if ($size !== null) {
-			header('Content-Length: ' . (int)$size);
+			header('Content-Length: ' . $size);
 		}
 		if ($etag !== null) {
 			header('ETag: ' . $etag);
