@@ -4,6 +4,11 @@
 -->
 # `files_sharing_raw` — **Nextcloud raw file server**
 
+[![REUSE status](https://api.reuse.software/badge/github.com/ernolf/files_sharing_raw)](https://api.reuse.software/info/github.com/ernolf/files_sharing_raw)
+[![Nextcloud App Store](https://img.shields.io/badge/Nextcloud-App_Store-0082c9?logo=nextcloud&logoColor=white)](https://apps.nextcloud.com/apps/files_sharing_raw)
+[![Latest release](https://img.shields.io/github/v/release/ernolf/files_sharing_raw?sort=semver&color=0082c9)](https://github.com/ernolf/files_sharing_raw/releases/latest)
+[![Built with ncmake](https://img.shields.io/badge/built%20with-ncmake-0082c9)](https://github.com/ernolf/ncmake)
+
 ---
 ---
 **`files_sharing_raw`** serves files **as-is** so you can link directly to the file itself (i.e. without any of Nextcloud's UI). This makes it easy to host static web pages, RSS feeds, images, or other assets and embed/link them elsewhere.
@@ -22,7 +27,7 @@
 
 > [!NOTE]
 > **`files_sharing_raw`** is the actively maintained successor to [`ernolf/raw`](https://github.com/ernolf/raw), which stopped working with Nextcloud 32 due to breaking API changes (`OCP\Share` was removed). `files_sharing_raw` was rebuilt from the ground up to be compatible with Nextcloud 32 and later, while adding a proper database registry, a Files sidebar UI, per-share CSP overrides, webserver offload support, and more.  
-> The longer app ID was chosen deliberately: from the outset, a [pull request to Nextcloud core](https://github.com/nextcloud/server/pull/58648) was planned to register `files_sharing_raw` in the `rootUrlApps` list — which is what enables the short, clean `/raw/{token}` URLs. That PR has been merged and the change ships with **Nextcloud 32.0.7+ and 33.0.1+**. On older patch releases a one-time manual patch is required (see [Activating root alias URLs](#activating-root-alias-urls-raw)).
+> The longer app ID was chosen deliberately: from the outset, a [pull request to Nextcloud core](https://github.com/nextcloud/server/pull/58648) was planned to register `files_sharing_raw` in the `rootUrlApps` list — which is what enables the short, clean `/raw/{token}` URLs. That PR has been merged and the change ships with **Nextcloud 32.0.7+ and 33.0.1+**. On older patch releases the app automatically falls back to the longer `/apps/files_sharing_raw/{token}` URLs.
 
 ---
 
@@ -89,7 +94,6 @@
   * [From the Nextcloud App Store](#from-the-nextcloud-app-store)
   * [Manual installation (release tarball)](#manual-installation-release-tarball)
   * [Developer setup (from source)](#developer-setup-from-source)
-  * [Activating root alias URLs (`/raw/`)](#activating-root-alias-urls-raw)
   * [Migrating from the `raw` app](#migrating-from-the-raw-app)
 
 * [Updating](#updating)
@@ -114,7 +118,7 @@
 6. (Optional) Configure CSP policies via `raw_csp`.
 
 > [!NOTE]
-> The short `/raw/{token}` URLs require the `rootUrlApps` entry described in [Installation](#activating-root-alias-urls-raw). Without it, the app automatically falls back to longer `/apps/files_sharing_raw/{token}` URLs.
+> The short `/raw/{token}` URLs are available since **Nextcloud 32.0.7 / 33.0.1**. On older cores the app automatically falls back to longer `/apps/files_sharing_raw/{token}` URLs.
 
 ---
 
@@ -155,7 +159,7 @@ The `/u/` prefix is **required** and cannot be omitted.
 
 ### Root aliases (`/raw` and `/rss`)
 
-When the `rootUrlApps` entry is active (see [Activating root alias URLs](#activating-root-alias-urls-raw)), the app uses short root alias URLs:
+Since **Nextcloud 32.0.7 / 33.0.1** the core grants the app its root aliases and the short URLs are active:
 
 | Purpose | URL |
 |---|---|
@@ -169,7 +173,7 @@ When the `rootUrlApps` entry is active (see [Activating root alias URLs](#activa
 
 ### Fallback URLs (without `rootUrlApps`)
 
-If the `rootUrlApps` entry is not yet active (see [Installation](#activating-root-alias-urls-raw), the app falls back to longer URLs:
+On cores without the root alias grant (below Nextcloud 32.0.7 / 33.0.1), the app falls back to longer URLs:
 
 | Purpose | URL |
 |---|---|
@@ -803,45 +807,11 @@ The easiest way to install this app is via the Nextcloud App Store:
    npm ci
    npm run build
    ```
+   The repository ships the [ncmake](https://github.com/ernolf/ncmake) bootstrap Makefile — `make` lists all build, test and release targets (containerized, no PHP or Node needed on the host).
 3. Enable the app:
    ```bash
    occ app:enable files_sharing_raw
    ```
-
-### Activating root alias URLs (`/raw/`)
-
-To use the short `/raw/{token}` URLs instead of the longer `/apps/files_sharing_raw/{token}` fallback, `files_sharing_raw` must be registered in Nextcloud core's `rootUrlApps` list. The [pull request](https://github.com/nextcloud/server/pull/58648) for this has been merged and ships with **Nextcloud 32.0.7+ and 33.0.1+**. On those versions no manual action is needed.
-
-If you are running an older patch release (below 32.0.7 or 33.0.1), the entry must be added once manually.
-
-The change is a single line in `lib/private/AppFramework/Routing/RouteParser.php`:
-
-```php
-private const rootUrlApps = [
-    'cloud_federation_api',
-    'core',
-    'files_sharing_raw',   // ← add this line
-    'files_sharing',
-    // ...
-];
-```
-
-A patch script is included in the app directory — just make it executable and run it:
-
-```bash
-chmod +x patch-route-parser.sh && ./patch-route-parser.sh
-```
-
-The script is idempotent — it finds `RouteParser.php` automatically and is safe to run multiple times.
-
-> [!NOTE]
-> **Nextcloud AIO / Docker users:** see the [AIO patch guide](Readme-aio.md) for step-by-step instructions on how to apply the patch inside the container.
-
-> [!NOTE]
-> On **Nextcloud 32.0.7+ and 33.0.1+** this manual step is not needed — the entry ships with the core update.
-> On older patch releases, the patch is a one-time action and does not need to be repeated after subsequent Nextcloud updates (those updates will already carry the entry).
->
-> Without this entry the app still works — it simply uses the longer fallback URLs.
 
 ### Migrating from the `raw` app
 
