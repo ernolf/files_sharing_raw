@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz <raphael.gradenwitz@googlemail.com>
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # Patches Nextcloud's RouteParser.php to add files_sharing_raw to the rootUrlApps list.
 # This enables clean /raw/{token} URLs instead of the longer /apps/files_sharing_raw/{token} fallback.
 #

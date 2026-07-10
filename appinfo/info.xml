@@ -2,7 +2,7 @@
 <!--
   - SPDX-FileCopyrightText: 2024-2026 [ernolf] Raphael Gradenwitz
   - SPDX-FileCopyrightText: 2018-2019 Gerben
-  - SPDX-License-Identifier: AGPL-3.0-only
+  - SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 <info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">

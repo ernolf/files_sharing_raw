@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz <raphael.gradenwitz@googlemail.com>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+version = 1
+SPDX-PackageName = "files_sharing_raw"
+SPDX-PackageSupplier = "[ernolf] Raphael Gradenwitz <raphael.gradenwitz@googlemail.com>"
+SPDX-PackageDownloadLocation = "https://github.com/ernolf/files_sharing_raw"
+
+[[annotations]]
+path = ["composer.json", "package.json", "package-lock.json"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024-2026 [ernolf] Raphael Gradenwitz"
+SPDX-License-Identifier = "AGPL-3.0-or-later"
+
+[[annotations]]
+path = [".github/FUNDING.yml", "Readme-aio.md"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024-2026 [ernolf] Raphael Gradenwitz"
+SPDX-License-Identifier = "AGPL-3.0-or-later"

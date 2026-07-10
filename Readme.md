@@ -1,3 +1,7 @@
+<!--
+  SPDX-FileCopyrightText: 2024-2026 [ernolf] Raphael Gradenwitz <raphael.gradenwitz@googlemail.com>
+  SPDX-License-Identifier: AGPL-3.0-or-later
+-->
 # `files_sharing_raw` — **Nextcloud raw file server**
 
 ---
