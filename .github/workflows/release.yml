@@ -1,0 +1,67 @@
+# SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz <raphael.gradenwitz@googlemail.com>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+name: Release tarball
+
+# Builds the App Store / install tarball (frontend build) and, when a release is
+# published, attaches it as a release asset. workflow_dispatch produces a
+# downloadable artifact for testing without publishing a release. No secrets, no
+# App Store upload: the store later only receives the download URL and a signature.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  tarball:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Build frontend
+        run: |
+          npm ci
+          npm run build
+
+      # The shipped file set mirrors the ncmake keep model: standard app paths,
+      # existence-filtered, so files added later (LICENSES, REUSE.toml, ...) ship
+      # automatically without touching this workflow.
+      - name: Assemble runtime tree
+        run: |
+          mkdir -p package/files_sharing_raw
+          for p in appinfo lib l10n templates img css js vendor LICENSES \
+                   CHANGELOG.md AUTHORS.md REUSE.toml COPYING COPYING.md LICENSE LICENSE.md; do
+            [ -e "$p" ] && cp -r "$p" package/files_sharing_raw/
+          done
+          true
+
+      - name: Create tarball
+        run: |
+          version=$(grep -oPm1 '(?<=<version>)[^<]+' appinfo/info.xml)
+          tarball="files_sharing_raw-${version}.tar.gz"
+          tar -C package -czf "$tarball" files_sharing_raw
+          echo "TARBALL=$tarball" >> "$GITHUB_ENV"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: files_sharing_raw-tarball
+          path: ${{ env.TARBALL }}
+
+      - name: Attach to release
+        if: github.event_name == 'release'
+        run: gh release upload "${GITHUB_REF_NAME}" "${TARBALL}" --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
