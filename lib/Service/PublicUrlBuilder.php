@@ -65,8 +65,8 @@ class PublicUrlBuilder {
 	}
 
 	public function publicTokenUrl(string $token, string $path = ''): string {
-		// When files_sharing_raw is listed in rootUrlApps (core patch applied), Nextcloud
-		// registers the route at /raw/{token}. Without the patch, it falls back to
+		// When the core lists files_sharing_raw in rootUrlApps (since Nextcloud 32.0.8 and
+		// 33.0.2), the route is registered at /raw/{token}. On older cores it falls back to
 		// /apps/files_sharing_raw/{token}. In both cases linkToRouteAbsolute returns the
 		// correct absolute URL — no guard needed here.
 		// Once root aliases are active, redirectCanonicalIfNeeded() issues a 307 for any

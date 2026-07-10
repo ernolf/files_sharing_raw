@@ -216,7 +216,7 @@ class PubPageController extends Controller {
 		return $this->getByTokenAndPathRoot('rss', (string)$path);
 	}
 
-	// Legacy routes: /apps/files_sharing_raw/... — always registered regardless of rootUrlApps patch.
+	// Legacy routes: /apps/files_sharing_raw/... — always registered regardless of root alias support.
 	// When root aliases are active: issue a 307 redirect to the canonical /raw/... URL.
 	// When root aliases are inactive: delegate directly to the corresponding canonical method.
 

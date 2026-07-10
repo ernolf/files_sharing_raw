@@ -18,7 +18,7 @@ use OCA\FilesSharingRaw\Middleware\ShareRawOnlyMiddleware;
 use OCA\FilesSharingRaw\Service\CspManager;
 use OCA\FilesSharingRaw\Service\PublicUrlBuilder;
 use OCA\FilesSharingRaw\Service\RawShareRegistry;
-use OCA\FilesSharingRaw\SetupCheck\RouteParserPatchCheck;
+use OCA\FilesSharingRaw\SetupCheck\RootRouteSupportCheck;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -58,8 +58,8 @@ class Application extends App implements IBootstrap {
 		// Global middleware: block /s/{token} when raw_only is set
 		$context->registerMiddleware(ShareRawOnlyMiddleware::class, true);
 
-		// Setup check: warn if RouteParser.php has not been patched yet
-		$context->registerSetupCheck(RouteParserPatchCheck::class);
+		// Setup check: warn when the core does not grant the app its root routes
+		$context->registerSetupCheck(RootRouteSupportCheck::class);
 	}
 
 	public function boot(IBootContext $context): void {

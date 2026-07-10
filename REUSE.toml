@@ -12,7 +12,7 @@ SPDX-FileCopyrightText = "2024-2026 [ernolf] Raphael Gradenwitz"
 SPDX-License-Identifier = "AGPL-3.0-or-later"
 
 [[annotations]]
-path = [".github/FUNDING.yml", "Readme-aio.md"]
+path = [".github/FUNDING.yml"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2024-2026 [ernolf] Raphael Gradenwitz"
 SPDX-License-Identifier = "AGPL-3.0-or-later"

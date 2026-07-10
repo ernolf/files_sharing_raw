@@ -18,8 +18,8 @@ return [
 			'requirements' => ['fileId' => '\d+']
 		],
 
-		// Root alias routes: /raw/{token} and /raw/{token}/{path}
-		// Require 'files_sharing_raw' in rootUrlApps (Nextcloud core RouteParser.php).
+		// Root alias routes: /raw/{token} and /raw/{token}/{path}.
+		// The core grants 'files_sharing_raw' these root routes since Nextcloud 32.0.8 and 33.0.2.
 		// Requests via fallback URLs below are 307-redirected to these when root aliases are active.
 		['name' => 'privatePage#getByPath', 'url' => '/u/{userId}/{path}', 'root' => '/raw',
 			'requirements' => [
@@ -29,7 +29,6 @@ return [
 		],
 
 		// Root namespace: /rss -> fixed token "rss"
-		// (requires core allowlist for rootUrlApps incl. 'files_sharing_raw')
 		['name' => 'pubPage#getRssRoot', 'url' => '/rss', 'root' => '', 'verb' => 'GET'],
 		['name' => 'pubPage#getRssRootPath', 'url' => '/rss/{path}', 'root' => '', 'verb' => 'GET',
 			'requirements' => ['path' => '.*'],

@@ -47,6 +47,6 @@ A user can also access their own private files. For example, a file named `test.
     <donation>https://github.com/sponsors/ernolf</donation>
     <dependencies>
         <php min-version="8.1" max-version="8.5"/>
-        <nextcloud min-version="32" max-version="34"/>
+        <nextcloud min-version="32" max-version="35"/>
     </dependencies>
 </info>
