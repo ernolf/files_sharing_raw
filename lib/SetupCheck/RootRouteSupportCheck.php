@@ -16,9 +16,9 @@ use OCP\SetupCheck\SetupResult;
 /**
  * Feature detection for the root URL aliases (/raw, /rss).
  *
- * The core grants files_sharing_raw its root routes since Nextcloud 32.0.8 and
- * 33.0.2 (rootUrlApps in RouteParser.php). A version check cannot express that
- * requirement (33.0.0 and 33.0.1 satisfy any min-version but lack the backport),
+ * The core grants files_sharing_raw its root routes since Nextcloud 32.0.7 and
+ * 33.0.1 (rootUrlApps in RouteParser.php). A version check cannot express that
+ * requirement (33.0.0 satisfies any min-version but lacks the backport),
  * so the support is probed at runtime through the route generator instead.
  */
 class RootRouteSupportCheck implements ISetupCheck {
@@ -48,7 +48,7 @@ class RootRouteSupportCheck implements ISetupCheck {
 			$this->l10n->t(
 				'This Nextcloud does not grant files_sharing_raw its root routes yet, '
 				. 'so links use the long /apps/files_sharing_raw/… form as fallback. '
-				. 'Upgrade to Nextcloud 32.0.8 / 33.0.2 or later for the clean /raw/… URLs.'
+				. 'Upgrade to Nextcloud 32.0.7 / 33.0.1 or later for the clean /raw/… URLs.'
 			)
 		);
 	}

@@ -19,7 +19,7 @@ return [
 		],
 
 		// Root alias routes: /raw/{token} and /raw/{token}/{path}.
-		// The core grants 'files_sharing_raw' these root routes since Nextcloud 32.0.8 and 33.0.2.
+		// The core grants 'files_sharing_raw' these root routes since Nextcloud 32.0.7 and 33.0.1.
 		// Requests via fallback URLs below are 307-redirected to these when root aliases are active.
 		['name' => 'privatePage#getByPath', 'url' => '/u/{userId}/{path}', 'root' => '/raw',
 			'requirements' => [
