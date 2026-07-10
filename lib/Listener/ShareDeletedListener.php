@@ -27,7 +27,7 @@ class ShareDeletedListener implements IEventListener {
 			return;
 		}
 		$share = $event->getShare();
-		$shareId = $this->normalizeShareId((string)$share->getId());
+		$shareId = $this->normalizeShareId($share->getId());
 		if ($shareId > 0) {
 			// Share is really gone -> remove row.
 			$this->registry->purge($shareId);

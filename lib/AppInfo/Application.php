@@ -35,13 +35,15 @@ use OCP\Share\IManager;
 use Psr\Log\LoggerInterface;
 
 class Application extends App implements IBootstrap {
+	public const APP_ID = 'files_sharing_raw';
+
 	/**
 	 * Application constructor
 	 *
 	 * @param array $urlParams
 	 */
 	public function __construct(array $urlParams = []) {
-		parent::__construct('files_sharing_raw', $urlParams);
+		parent::__construct(self::APP_ID, $urlParams);
 		$container = $this->getContainer();
 
 		$this->registerServices($container);
@@ -119,7 +121,7 @@ class Application extends App implements IBootstrap {
 	 */
 	protected function registerControllers(IContainer $c) {
 		$c->registerService('PubPageController', function ($container) {
-			$appName = $container->getAppName();
+			$appName = self::APP_ID;
 			/** @var IRequest $request */
 			$request = $container->query('Request');
 			/** @var IManager $shareManager */
@@ -137,7 +139,7 @@ class Application extends App implements IBootstrap {
 		});
 
 		$c->registerService('PrivatePageController', function ($container) {
-			$appName = $container->getAppName();
+			$appName = self::APP_ID;
 			/** @var IRequest $request */
 			$request = $container->query('Request');
 			/** @var IRootFolder $rootFolder */
@@ -157,7 +159,7 @@ class Application extends App implements IBootstrap {
 		});
 
 		$c->registerService('RawShareApiController', function ($container) {
-			$appName = $container->getAppName();
+			$appName = self::APP_ID;
 			/** @var IRequest $request */
 			$request = $container->query('Request');
 			/** @var IManager $shareManager */
