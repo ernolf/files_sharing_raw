@@ -2,7 +2,7 @@
 	"name": "ernolf/files_sharing_raw",
 	"description": "Serves files raw on the World Wide Web: link directly to file contents without any of Nextcloud's UI.",
 	"type": "nextcloud-app",
-	"version": "0.5.3",
+	"version": "0.6.0",
 	"license": "AGPL-3.0-or-later",
 	"authors": [
 		{
