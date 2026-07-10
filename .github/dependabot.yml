@@ -1,0 +1,58 @@
+# SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz <raphael.gradenwitz@googlemail.com>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+version: 2
+updates:
+  # GitHub Actions used across the workflow files
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build
+      include: scope
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  # PHP: runtime dependency plus the bamarni vendor-bin dev tools
+  - package-ecosystem: composer
+    directories:
+      - "/"
+      - "/vendor-bin/*"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build
+      include: scope
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
+    groups:
+      composer:
+        patterns:
+          - "*"
+
+  # Frontend
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build
+      include: scope
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
+    groups:
+      npm:
+        patterns:
+          - "*"
