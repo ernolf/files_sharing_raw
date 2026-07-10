@@ -1,4 +1,5 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2024-2026 [ernolf] Raphael Gradenwitz
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -9,8 +10,8 @@ namespace OCA\FilesSharingRaw\Controller;
 
 use OCA\FilesSharingRaw\Service\PublicUrlBuilder;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\DataResponse;
 use OCP\IRequest;
 
 class PublicUrlController extends Controller {

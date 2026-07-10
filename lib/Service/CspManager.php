@@ -1,8 +1,10 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2024-2026 [ernolf] Raphael Gradenwitz
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
+
 namespace OCA\FilesSharingRaw\Service;
 
 use OCP\IConfig;
@@ -70,10 +72,10 @@ class CspManager {
 		}
 
 		// extract selectors from the configured array (safe defaults to empty arrays)
-		$tokens     = $rawCsp['token'] ?? [];
-		$prefixes   = $rawCsp['path_prefix'] ?? [];
+		$tokens = $rawCsp['token'] ?? [];
+		$prefixes = $rawCsp['path_prefix'] ?? [];
 		$extensions = $rawCsp['extension'] ?? [];
-		$mimetypes  = $rawCsp['mimetype'] ?? [];
+		$mimetypes = $rawCsp['mimetype'] ?? [];
 		// DON'T overwrite $mimetypes — path_contains is separate
 		// $contains will be read below when needed
 
@@ -138,14 +140,18 @@ class CspManager {
 		} else {
 			$afterTokenPath = preg_replace('#^/apps/files_sharing_raw#', '', $uriPath);
 		}
-		if ($afterTokenPath === '') { $afterTokenPath = '/'; }
+		if ($afterTokenPath === '') {
+			$afterTokenPath = '/';
+		}
 
 		// 2) path-prefix matching: supports absolute prefixes (start with /apps/files_sharing_raw) and relative prefixes (match against $afterTokenPath)
 		$bestPrefix = null;
 		$bestIsRelative = false;
 		foreach ($prefixes as $prefix => $policy) {
 			$prefix = (string)$prefix;
-			if ($prefix === '') { continue; }
+			if ($prefix === '') {
+				continue;
+			}
 
 			// absolute prefix: compare against full URI path
 			if (strpos($prefix, '/apps/files_sharing_raw') === 0) {
@@ -186,7 +192,9 @@ class CspManager {
 		$contains = $rawCsp['path_contains'] ?? [];
 		foreach ($contains as $pattern => $policy) {
 			$pat = (string)$pattern;
-			if ($pat === '') { continue; }
+			if ($pat === '') {
+				continue;
+			}
 
 			// If the admin supplied a pattern that starts with '/', treat it as a verbatim substring.
 			// This is useful to match exact segments like "/html/".
@@ -256,7 +264,9 @@ class CspManager {
 			$normalized = [];
 			foreach ($policy as $directive => $value) {
 				$directive = trim((string)$directive);
-				if ($directive === '') { continue; }
+				if ($directive === '') {
+					continue;
+				}
 				if (!in_array($directive, $allowed, true)) {
 					// skip unknown directive
 					continue;
@@ -265,13 +275,17 @@ class CspManager {
 				if (is_array($value)) {
 					foreach ($value as $v) {
 						$v = trim((string)$v);
-						if ($v === '') { continue; }
+						if ($v === '') {
+							continue;
+						}
 						$sources[] = $v;
 					}
 				} else {
 					$parts = preg_split('/\s+/', trim((string)$value));
 					foreach ($parts as $p) {
-						if ($p !== '') { $sources[] = $p; }
+						if ($p !== '') {
+							$sources[] = $p;
+						}
 					}
 				}
 				$sources = array_values(array_unique($sources));

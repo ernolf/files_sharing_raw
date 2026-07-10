@@ -1,8 +1,10 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2024-2026 [ernolf] Raphael Gradenwitz
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
+
 namespace OCA\FilesSharingRaw\Listener;
 
 use OCA\FilesSharingRaw\Service\RawShareRegistry;
@@ -38,4 +40,3 @@ class ShareDeletedListener implements IEventListener {
 		return $n > 0 ? $n : 0;
 	}
 }
-

@@ -1,8 +1,10 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2024-2026 [ernolf] Raphael Gradenwitz
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
+
 namespace OCA\FilesSharingRaw\AppInfo;
 
 use OCA\Files\Event\LoadAdditionalScriptsEvent;
@@ -14,25 +16,25 @@ use OCA\FilesSharingRaw\Listener\FilesLoadAdditionalScriptsListener;
 use OCA\FilesSharingRaw\Listener\ShareDeletedListener;
 use OCA\FilesSharingRaw\Listener\ShareUpdatedListener;
 use OCA\FilesSharingRaw\Middleware\ShareRawOnlyMiddleware;
-use OCA\FilesSharingRaw\SetupCheck\RouteParserPatchCheck;
 use OCA\FilesSharingRaw\Service\CspManager;
 use OCA\FilesSharingRaw\Service\PublicUrlBuilder;
 use OCA\FilesSharingRaw\Service\RawShareRegistry;
+use OCA\FilesSharingRaw\SetupCheck\RouteParserPatchCheck;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\Files\IRootFolder;
 use OCP\IConfig;
 use OCP\IContainer;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
-use Psr\Log\LoggerInterface;
-use OCP\Files\IRootFolder;
 use OCP\Share\Events\ShareDeletedEvent;
 use OCP\Share\Events\ShareUpdatedEvent;
 use OCP\Share\IManager;
+use Psr\Log\LoggerInterface;
 
 class Application extends App implements IBootstrap {
 	/**
@@ -70,7 +72,7 @@ class Application extends App implements IBootstrap {
 	 * Register shared services used by the app.
 	 */
 	protected function registerServices(IContainer $c) {
-		$c->registerService(ShareRawOnlyMiddleware::class, function($container) {
+		$c->registerService(ShareRawOnlyMiddleware::class, function ($container) {
 			/** @var IRequest $request */
 			$request = $container->query('Request');
 			/** @var RawShareMapper $mapper */
@@ -80,13 +82,13 @@ class Application extends App implements IBootstrap {
 			return new ShareRawOnlyMiddleware($request, $mapper, $config);
 		});
 
-		$c->registerService('RawShareMapper', function($container) {
+		$c->registerService('RawShareMapper', function ($container) {
 			/** @var \OCP\IDBConnection $db */
 			$db = $container->query('OCP\IDBConnection');
 			return new RawShareMapper($db);
 		});
 
-		$c->registerService('RawShareRegistry', function($container) {
+		$c->registerService('RawShareRegistry', function ($container) {
 			/** @var RawShareMapper $mapper */
 			$mapper = $container->query('RawShareMapper');
 			/** @var \OCP\AppFramework\Utility\ITimeFactory $time */
@@ -94,7 +96,7 @@ class Application extends App implements IBootstrap {
 			return new RawShareRegistry($mapper, $time);
 		});
 
-		$c->registerService('CspManager', function($container) {
+		$c->registerService('CspManager', function ($container) {
 			/** @var IConfig $config */
 			$config = $container->query('OCP\IConfig');
 			/** @var IManager $shareManager */
@@ -104,7 +106,7 @@ class Application extends App implements IBootstrap {
 			return new CspManager($config, $shareManager, $registry);
 		});
 
-		$c->registerService('PublicUrlBuilder', function($container) {
+		$c->registerService('PublicUrlBuilder', function ($container) {
 			/** @var IConfig $config */
 			$config = $container->query('OCP\IConfig');
 			/** @var IURLGenerator $url */
@@ -119,7 +121,7 @@ class Application extends App implements IBootstrap {
 	 * Register controller factories that inject dependencies.
 	 */
 	protected function registerControllers(IContainer $c) {
-		$c->registerService('PubPageController', function($container) {
+		$c->registerService('PubPageController', function ($container) {
 			$appName = $container->getAppName();
 			/** @var IRequest $request */
 			$request = $container->query('Request');
@@ -137,7 +139,7 @@ class Application extends App implements IBootstrap {
 			return new PubPageController($appName, $request, $shareManager, $config, $cspManager, $publicUrlBuilder, $registry);
 		});
 
-		$c->registerService('PrivatePageController', function($container) {
+		$c->registerService('PrivatePageController', function ($container) {
 			$appName = $container->getAppName();
 			/** @var IRequest $request */
 			$request = $container->query('Request');
@@ -157,7 +159,7 @@ class Application extends App implements IBootstrap {
 			return new PrivatePageController($appName, $request, $rootFolder, $cspManager, $config, $userSession, $publicUrlBuilder, $url);
 		});
 
-		$c->registerService('RawShareApiController', function($container) {
+		$c->registerService('RawShareApiController', function ($container) {
 			$appName = $container->getAppName();
 			/** @var IRequest $request */
 			$request = $container->query('Request');

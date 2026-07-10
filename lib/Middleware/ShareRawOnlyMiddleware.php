@@ -1,8 +1,10 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
+
 namespace OCA\FilesSharingRaw\Middleware;
 
 use OCA\FilesSharingRaw\Db\RawShareMapper;
@@ -25,7 +27,8 @@ class ShareRawOnlyMiddleware extends Middleware {
 		private IRequest $request,
 		private RawShareMapper $mapper,
 		private IConfig $config,
-	) {}
+	) {
+	}
 
 	public function beforeController($controller, $methodName): void {
 		$path = $this->request->getPathInfo();

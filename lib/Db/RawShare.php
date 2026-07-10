@@ -1,8 +1,10 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2024-2026 [ernolf] Raphael Gradenwitz
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
+
 namespace OCA\FilesSharingRaw\Db;
 
 use OCP\AppFramework\Db\Entity;

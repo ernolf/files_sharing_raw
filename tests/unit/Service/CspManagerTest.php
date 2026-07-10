@@ -95,7 +95,7 @@ class CspManagerTest extends TestCase {
 		$_SERVER['REQUEST_URI'] = '/raw/aBc123/html/file.html';
 		$this->withRawCsp([
 			'token' => ['aBc123' => "default-src 'self'"],
-			'extension' => ['html' => "img-src data:"],
+			'extension' => ['html' => 'img-src data:'],
 		]);
 
 		self::assertSame("default-src 'self'", $this->manager->determineCspForRequest($this->fileNode('file.html', 'text/html')));
@@ -120,7 +120,7 @@ class CspManagerTest extends TestCase {
 
 	public function testDbCspIsUsedForRawEnabledShares(): void {
 		$_SERVER['REQUEST_URI'] = '/raw/aBc123/file.txt';
-		$this->withRawCsp(['extension' => ['txt' => "img-src data:"]]);
+		$this->withRawCsp(['extension' => ['txt' => 'img-src data:']]);
 
 		$share = $this->createMock(IShare::class);
 		$share->method('getShareType')->willReturn(IShare::TYPE_LINK);
@@ -135,7 +135,7 @@ class CspManagerTest extends TestCase {
 
 	public function testDbCspIsIgnoredForDisabledShares(): void {
 		$_SERVER['REQUEST_URI'] = '/raw/aBc123/file.txt';
-		$this->withRawCsp(['extension' => ['txt' => "img-src data:"]]);
+		$this->withRawCsp(['extension' => ['txt' => 'img-src data:']]);
 
 		$share = $this->createMock(IShare::class);
 		$share->method('getShareType')->willReturn(IShare::TYPE_LINK);
@@ -148,7 +148,7 @@ class CspManagerTest extends TestCase {
 
 	public function testShareLookupFailureNeverThrows(): void {
 		$_SERVER['REQUEST_URI'] = '/raw/aBc123/file.txt';
-		$this->withRawCsp(['extension' => ['txt' => "img-src data:"]]);
+		$this->withRawCsp(['extension' => ['txt' => 'img-src data:']]);
 		$this->shareManager->method('getShareByToken')->willThrowException(new \Exception('gone'));
 
 		self::assertSame('img-src data:', $this->manager->determineCspForRequest($this->fileNode()));
@@ -178,7 +178,7 @@ class CspManagerTest extends TestCase {
 		$_SERVER['REQUEST_URI'] = '/raw/aBc123/html/sub/page.html';
 		$this->withRawCsp([
 			'path_prefix' => [
-				'/html/' => "img-src data:",
+				'/html/' => 'img-src data:',
 				'/html/sub/' => "default-src 'self'",
 			],
 		]);

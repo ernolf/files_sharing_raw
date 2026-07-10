@@ -1,9 +1,11 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2024-2026 [ernolf] Raphael Gradenwitz
  * SPDX-FileCopyrightText: 2018-2019 Gerben
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
+
 namespace OCA\FilesSharingRaw\Controller;
 
 use OCA\FilesSharingRaw\Service\CspManager;
@@ -58,7 +60,7 @@ class PrivatePageController extends Controller {
 		IConfig $config,
 		IUserSession $userSession,
 		PublicUrlBuilder $publicUrlBuilder,
-		IURLGenerator $url
+		IURLGenerator $url,
 	) {
 		parent::__construct($appName, $request);
 

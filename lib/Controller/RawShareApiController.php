@@ -1,15 +1,17 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2024-2026 [ernolf] Raphael Gradenwitz
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
+
 namespace OCA\FilesSharingRaw\Controller;
 
 use OCA\FilesSharingRaw\Service\PublicUrlBuilder;
 use OCA\FilesSharingRaw\Service\RawShareRegistry;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\DataResponse;
 use OCP\Files\IRootFolder;
 use OCP\IConfig;
 use OCP\IGroupManager;
@@ -36,7 +38,7 @@ class RawShareApiController extends Controller {
 		PublicUrlBuilder $urlBuilder,
 		IRootFolder $rootFolder,
 		IConfig $config,
-		IGroupManager $groupManager
+		IGroupManager $groupManager,
 	) {
 		parent::__construct($appName, $request);
 		$this->shareManager = $shareManager;

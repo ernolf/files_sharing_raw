@@ -1,9 +1,11 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2024-2026 [ernolf] Raphael Gradenwitz
  * SPDX-FileCopyrightText: 2018-2019 Gerben
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
+
 namespace OCA\FilesSharingRaw\Controller;
 
 use OCA\FilesSharingRaw\Service\CspManager;
@@ -54,7 +56,7 @@ class PubPageController extends Controller {
 		IConfig $config,
 		CspManager $cspManager,
 		PublicUrlBuilder $publicUrlBuilder,
-		RawShareRegistry $rawRegistry
+		RawShareRegistry $rawRegistry,
 	) {
 		parent::__construct($appName, $request);
 		$this->shareManager = $shareManager;
@@ -158,7 +160,6 @@ class PubPageController extends Controller {
 		return $this->getByToken($token);
 	}
 
-
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	#[PublicPage]
@@ -195,7 +196,6 @@ class PubPageController extends Controller {
 		// Root alias route: /raw/{token}/{path}
 		return $this->getByTokenAndPath($token, $path);
 	}
-
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]

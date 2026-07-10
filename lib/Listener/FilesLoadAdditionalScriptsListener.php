@@ -1,8 +1,10 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2024-2026 [ernolf] Raphael Gradenwitz
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
+
 namespace OCA\FilesSharingRaw\Listener;
 
 use OCA\Files\Event\LoadAdditionalScriptsEvent;
@@ -20,4 +22,3 @@ class FilesLoadAdditionalScriptsListener implements IEventListener {
 		Util::addInitScript('files_sharing_raw', 'files_sharing_raw-sharing-sidebar');
 	}
 }
-

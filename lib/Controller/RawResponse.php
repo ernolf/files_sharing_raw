@@ -1,9 +1,11 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2024-2026 [ernolf] Raphael Gradenwitz
  * SPDX-FileCopyrightText: 2018-2019 Gerben
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
+
 namespace OCA\FilesSharingRaw\Controller;
 
 use OCA\FilesSharingRaw\Service\CspManager;
@@ -81,14 +83,14 @@ trait RawResponse {
 
 		if (isset($this->config) && $this->config instanceof IConfig) {
 			$publicMaxAge = (int)$this->config->getSystemValue('raw_cache_public_max_age', $publicMaxAge);
-			$publicSWR    = (int)$this->config->getSystemValue('raw_cache_public_stale_while_revalidate', $publicSWR);
-			$publicSIE    = (int)$this->config->getSystemValue('raw_cache_public_stale_if_error', $publicSIE);
+			$publicSWR = (int)$this->config->getSystemValue('raw_cache_public_stale_while_revalidate', $publicSWR);
+			$publicSIE = (int)$this->config->getSystemValue('raw_cache_public_stale_if_error', $publicSIE);
 			$privateNoStore = (bool)$this->config->getSystemValue('raw_cache_private_no_store', $privateNoStore);
 		}
 
 		$publicMaxAge = max(0, $publicMaxAge);
-		$publicSWR    = max(0, $publicSWR);
-		$publicSIE    = max(0, $publicSIE);
+		$publicSWR = max(0, $publicSWR);
+		$publicSIE = max(0, $publicSIE);
 
 		if ($isPrivate) {
 			if ($privateNoStore) {
@@ -181,7 +183,7 @@ trait RawResponse {
 		?int $size,
 		?string $etag,
 		?string $lastModifiedHeader,
-		?string &$reason
+		?string &$reason,
 	): bool {
 		$reason = 'unknown';
 
@@ -224,7 +226,7 @@ trait RawResponse {
 		}
 
 		// Common headers (we want identical semantics vs streaming)
-		header("Content-Type: " . $this->addCharset($mimetype));
+		header('Content-Type: ' . $this->addCharset($mimetype));
 		if ($size !== null) {
 			header('Content-Length: ' . (int)$size);
 		}
@@ -463,7 +465,7 @@ trait RawResponse {
 		// If we are responding to HEAD, do not read the file content.
 		if ($isHead) {
 			$this->emitOffloadDebug('none', 'head_request');
-			header("Content-Type: " . $this->addCharset($mimetype));
+			header('Content-Type: ' . $this->addCharset($mimetype));
 			if ($size !== null) {
 				header('Content-Length: ' . (int)$size);
 			}
@@ -485,7 +487,7 @@ trait RawResponse {
 			$mimetype = $this->getMimeType($fileNode, $content);
 			$etag = '"' . md5($content) . '"';
 
-			header("Content-Type: " . $this->addCharset($mimetype));
+			header('Content-Type: ' . $this->addCharset($mimetype));
 			header('Content-Length: ' . ($size !== null ? (int)$size : strlen($content)));
 			header('ETag: ' . $etag);
 			if ($lastModifiedHeader !== null) {
@@ -537,7 +539,7 @@ trait RawResponse {
 			$content = $fileNode->getContent();
 			$mimetype = $this->getMimeType($fileNode, $content);
 
-			header("Content-Type: " . $this->addCharset($mimetype));
+			header('Content-Type: ' . $this->addCharset($mimetype));
 			header('Content-Length: ' . ($size !== null ? (int)$size : strlen($content)));
 			header('ETag: ' . $etag);
 			if ($lastModifiedHeader !== null) {
@@ -569,7 +571,7 @@ trait RawResponse {
 		}
 
 		// --- Send headers ---
-		header("Content-Type: " . $this->addCharset($mimetype));
+		header('Content-Type: ' . $this->addCharset($mimetype));
 		if ($size !== null) {
 			header('Content-Length: ' . (int)$size);
 		}

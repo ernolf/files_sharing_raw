@@ -1,4 +1,5 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2024-2026 [ernolf] Raphael Gradenwitz
  * SPDX-FileCopyrightText: 2018-2019 Gerben
@@ -14,36 +15,36 @@ return [
 		['name' => 'rawShareApi#get', 'url' => '/api/v1/raw-share/{shareId}', 'verb' => 'GET'],
 		['name' => 'rawShareApi#set', 'url' => '/api/v1/raw-share/{shareId}', 'verb' => 'POST'],
 		['name' => 'rawShareApi#listByFileId', 'url' => '/api/v1/raw-shares/{fileId}', 'verb' => 'GET',
-			'requirements' => array('fileId' => '\d+')
+			'requirements' => ['fileId' => '\d+']
 		],
 
 		// Root alias routes: /raw/{token} and /raw/{token}/{path}
 		// Require 'files_sharing_raw' in rootUrlApps (Nextcloud core RouteParser.php).
 		// Requests via fallback URLs below are 307-redirected to these when root aliases are active.
 		['name' => 'privatePage#getByPath', 'url' => '/u/{userId}/{path}', 'root' => '/raw',
-			'requirements' => array(
+			'requirements' => [
 				'userId' => '[^/]+',
 				'path' => '.+'
-			)
+			]
 		],
 
 		// Root namespace: /rss -> fixed token "rss"
 		// (requires core allowlist for rootUrlApps incl. 'files_sharing_raw')
 		['name' => 'pubPage#getRssRoot', 'url' => '/rss', 'root' => '', 'verb' => 'GET'],
 		['name' => 'pubPage#getRssRootPath', 'url' => '/rss/{path}', 'root' => '', 'verb' => 'GET',
-			'requirements' => array('path' => '.*'),
-			'defaults' => array('path' => ''),
+			'requirements' => ['path' => '.*'],
+			'defaults' => ['path' => ''],
 		],
 
 		['name' => 'pubPage#getByTokenRoot', 'url' => '/{token}', 'root' => '/raw', 'verb' => 'GET',
-			'requirements' => array('token' => '[A-Za-z0-9-]+')
+			'requirements' => ['token' => '[A-Za-z0-9-]+']
 		],
 		['name' => 'pubPage#getByTokenAndPathRoot', 'url' => '/{token}/{path}', 'root' => '/raw',
 			'verb' => 'GET',
-			'requirements' => array(
+			'requirements' => [
 				'token' => '[A-Za-z0-9-]+',
 				'path' => '.+'
-			)
+			]
 		],
 
 		// Legacy routes — always registered at /apps/files_sharing_raw/... (no root parameter).
