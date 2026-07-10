@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  - SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz <raphael.gradenwitz@googlemail.com>
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 bootstrap="tests/bootstrap.php"
+		 timeoutForSmallTests="900"
+		 timeoutForMediumTests="900"
+		 timeoutForLargeTests="900"
+		 xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
+		 cacheDirectory=".phpunit.cache">
+	<testsuite name="Nextcloud - files_sharing_raw unit tests">
+		<directory suffix=".php">./tests/unit</directory>
+	</testsuite>
+	<source>
+		<include>
+			<directory>./lib</directory>
+		</include>
+	</source>
+</phpunit>

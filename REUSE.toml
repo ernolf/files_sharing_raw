@@ -6,7 +6,7 @@ SPDX-PackageSupplier = "[ernolf] Raphael Gradenwitz <raphael.gradenwitz@googlema
 SPDX-PackageDownloadLocation = "https://github.com/ernolf/files_sharing_raw"
 
 [[annotations]]
-path = ["composer.json", "package.json", "package-lock.json"]
+path = ["composer.json", "composer.lock", "vendor-bin/*/composer.json", "package.json", "package-lock.json"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2024-2026 [ernolf] Raphael Gradenwitz"
 SPDX-License-Identifier = "AGPL-3.0-or-later"

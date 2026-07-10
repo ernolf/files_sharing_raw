@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!--
+  - SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz <raphael.gradenwitz@googlemail.com>
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+<psalm
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="https://getpsalm.org/schema/config"
+	xsi:schemaLocation="https://getpsalm.org/schema/config vendor-bin/psalm/vendor/vimeo/psalm/config.xsd"
+	errorLevel="4"
+	findUnusedBaselineEntry="false"
+	findUnusedCode="false"
+	phpVersion="8.1"
+	resolveFromConfigFile="true"
+>
+	<stubs>
+		<file name="tests/stub.php" preloadClasses="true"/>
+	</stubs>
+	<projectFiles>
+		<directory name="lib" />
+		<ignoreFiles>
+			<directory name="vendor" />
+			<directory name="vendor-bin" />
+		</ignoreFiles>
+	</projectFiles>
+	<extraFiles>
+		<directory name="vendor" />
+		<directory name="vendor-bin/nextcloud-ocp" />
+	</extraFiles>
+	<issueHandlers>
+		<UndefinedDocblockClass>
+			<errorLevel type="suppress">
+				<referencedClass name="Doctrine\DBAL\Schema\Schema" />
+				<referencedClass name="Doctrine\DBAL\Schema\Table" />
+				<referencedClass name="Doctrine\DBAL\Schema\SchemaException" />
+			</errorLevel>
+		</UndefinedDocblockClass>
+	</issueHandlers>
+</psalm>

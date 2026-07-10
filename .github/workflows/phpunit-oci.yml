@@ -1,0 +1,102 @@
+# SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz <raphael.gradenwitz@googlemail.com>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+name: PHPUnit oci
+
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+      - stable*
+
+concurrency:
+  group: phpunit-oci-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  phpunit-oci:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.1', '8.2', '8.3', '8.4', '8.5']
+        server-version: ['stable32', 'stable33', 'stable34', 'master']
+        exclude:
+          # Nextcloud 33+ requires PHP >= 8.2
+          - php-version: '8.1'
+            server-version: 'stable33'
+          - php-version: '8.1'
+            server-version: 'stable34'
+          - php-version: '8.1'
+            server-version: 'master'
+          # Nextcloud 32 supports up to PHP 8.4
+          - php-version: '8.5'
+            server-version: 'stable32'
+          # Nextcloud master (35) requires PHP >= 8.3
+          - php-version: '8.2'
+            server-version: 'master'
+
+    name: NC ${{ matrix.server-version }} php${{ matrix.php-version }} oci
+
+    services:
+      oracle:
+        image: ghcr.io/gvenzl/oracle-free:23
+        env:
+          ORACLE_PASSWORD: oracle
+        ports:
+          - 1521:1521
+        options: >-
+          --health-cmd healthcheck.sh
+          --health-interval 20s
+          --health-timeout 10s
+          --health-retries 10
+
+    steps:
+      - name: Set up php${{ matrix.php-version }}
+        uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1 # 2.36.0
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: ctype,curl,dom,gd,iconv,intl,json,mbstring,oci8,openssl,posix,sqlite,xml,zip
+          coverage: none
+
+      - name: Checkout Nextcloud ${{ matrix.server-version }}
+        run: git clone https://github.com/nextcloud/server.git --recursive --depth 1 -b ${{ matrix.server-version }} nextcloud
+
+      - name: Checkout app
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          path: nextcloud/apps/files_sharing_raw
+
+      - name: Install app dependencies
+        working-directory: nextcloud/apps/files_sharing_raw
+        run: composer install
+
+      - name: Install Nextcloud
+        run: php -f nextcloud/occ maintenance:install --verbose --database oci --database-name FREE --database-host 127.0.0.1 --database-port 1521 --database-user system --database-pass oracle --admin-user admin --admin-pass admin
+
+      - name: Enable app (runs the migration)
+        run: php -f nextcloud/occ app:enable --force files_sharing_raw
+
+      - name: Run tests
+        working-directory: nextcloud/apps/files_sharing_raw
+        run: composer run test:unit
+
+  summary:
+    permissions:
+      contents: none
+    runs-on: ubuntu-latest
+    needs: phpunit-oci
+
+    if: always()
+
+    name: phpunit-oci-summary
+
+    steps:
+      - name: Summary status
+        run: if ${{ needs.phpunit-oci.result != 'success' }}; then exit 1; fi
