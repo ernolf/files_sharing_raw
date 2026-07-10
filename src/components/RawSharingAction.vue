@@ -481,9 +481,11 @@ watch(enabled, (val) => {
 	min-height: 44px;
 }
 
-.rawAction :deep(.checkbox-radio-switch__icon) {
-	transform: scale(1.05);
-	transform-origin: left center;
+/* Our bundled @nextcloud/vue renders the toggle icon at 20px while the native
+   share toggles are 24px - size it explicitly to match them. */
+.rawAction :deep(.checkbox-radio-switch__icon svg) {
+	width: 24px;
+	height: 24px;
 }
 
 /* --- Raw link list (resets browser ul defaults) --- */
