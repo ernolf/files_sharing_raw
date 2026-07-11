@@ -5,11 +5,11 @@
   - SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 <info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
-    <id>files_sharing_raw</id>
-    <name>Raw Fileserver</name>
-    <summary>Serves files "raw" on the World Wide Web</summary>
-    <description>
+	xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>files_sharing_raw</id>
+	<name>Raw Fileserver</name>
+	<summary>Serves files "raw" on the World Wide Web</summary>
+	<description>
 Raw Fileserver (**`files_sharing_raw`**) serves files **as-is** so you can link directly to the file itself (i.e. without any of Nextcloud's UI). This makes it easy to host static web pages, RSS feeds, images, or other assets and embed/link them elsewhere.
 
 ## Design goals
@@ -32,21 +32,24 @@ The common usage is to first share a file and enable public access through a lin
 
 A user can also access their own private files. For example, a file named `test.html` in anansi's Documents folder would be available at `https://my-nextcloud/raw/u/anansi/Documents/test.html`.
 </description>
-    <version>0.6.0</version>
-    <licence>agpl</licence>
-    <author mail="raphael.gradenwitz@googlemail.com">[ernolf] - Raphael Gradenwitz</author>
-    <namespace>FilesSharingRaw</namespace>
-    <documentation>
-        <admin>https://github.com/ernolf/files_sharing_raw#readme</admin>
-    </documentation>
-    <category>files</category>
-    <website>https://github.com/ernolf/files_sharing_raw</website>
-    <bugs>https://github.com/ernolf/files_sharing_raw/issues</bugs>
-    <repository type="git">https://github.com/ernolf/files_sharing_raw</repository>
-    <donation type="paypal" title="Donate via PayPal">https://PayPal.Me/ernolf</donation>
-    <donation>https://github.com/sponsors/ernolf</donation>
-    <dependencies>
-        <php min-version="8.1" max-version="8.5"/>
-        <nextcloud min-version="32" max-version="35"/>
-    </dependencies>
+	<version>0.6.0</version>
+	<licence>agpl</licence>
+	<author mail="raphael.gradenwitz@googlemail.com">[ernolf] - Raphael Gradenwitz</author>
+	<namespace>FilesSharingRaw</namespace>
+	<types>
+		<prevent_group_restriction />
+	</types>
+	<documentation>
+		<admin>https://github.com/ernolf/files_sharing_raw#readme</admin>
+	</documentation>
+	<category>files</category>
+	<website>https://github.com/ernolf/files_sharing_raw</website>
+	<bugs>https://github.com/ernolf/files_sharing_raw/issues</bugs>
+	<repository type="git">https://github.com/ernolf/files_sharing_raw</repository>
+	<donation type="paypal" title="Donate via PayPal">https://PayPal.Me/ernolf</donation>
+	<donation>https://github.com/sponsors/ernolf</donation>
+	<dependencies>
+		<php min-version="8.1" max-version="8.5"/>
+		<nextcloud min-version="32" max-version="35"/>
+	</dependencies>
 </info>
