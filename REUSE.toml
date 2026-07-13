@@ -12,7 +12,13 @@ SPDX-FileCopyrightText = "2024-2026 [ernolf] Raphael Gradenwitz"
 SPDX-License-Identifier = "AGPL-3.0-or-later"
 
 [[annotations]]
-path = [".github/FUNDING.yml"]
+path = [".github/FUNDING.yml", ".tx/config", "l10n/.gitkeep"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2024-2026 [ernolf] Raphael Gradenwitz"
+SPDX-License-Identifier = "AGPL-3.0-or-later"
+
+[[annotations]]
+path = ["l10n/**.js", "l10n/**.json"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Nextcloud translators"
 SPDX-License-Identifier = "AGPL-3.0-or-later"
