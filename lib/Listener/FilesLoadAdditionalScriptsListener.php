@@ -21,7 +21,8 @@ class FilesLoadAdditionalScriptsListener implements IEventListener {
 			return;
 		}
 
-		// Load init script.
+		// Load the init script and its extracted styles.
 		Util::addInitScript('files_sharing_raw', 'files_sharing_raw-sharing-sidebar');
+		Util::addStyle('files_sharing_raw', 'files_sharing_raw-sharing-sidebar');
 	}
 }
