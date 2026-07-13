@@ -6,8 +6,9 @@
 /vendor-bin/*/vendor/
 /vendor-bin/*/composer.lock
 
-# Built js package
+# Built js and css packages
 js/*
+css/*
 
 # Node modules
 node_modules/
