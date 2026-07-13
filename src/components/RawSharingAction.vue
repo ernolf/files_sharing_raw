@@ -177,12 +177,12 @@ const CSP_PRESETS = [
 	},
 	{
 		id: 'documents',
-		label: t('files_sharing_raw', 'Documents (PDF / text)'),
+		label: t('files_sharing_raw', 'Documents (PDF/text)'),
 		csp: "default-src 'none'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; form-action 'none'",
 	},
 	{
 		id: 'media',
-		label: t('files_sharing_raw', 'Audio / Video'),
+		label: t('files_sharing_raw', 'Audio/video'),
 		csp: "default-src 'none'; media-src 'self' data: blob:; img-src 'self' data:; form-action 'none'",
 	},
 	{
@@ -317,7 +317,7 @@ async function loadStateFromBackend() {
  */
 async function save() {
 	if (!shareId.value) {
-		showError(t('files_sharing_raw', 'No share id found.'))
+		showError(t('files_sharing_raw', 'No share ID found.'))
 		return
 	}
 	const url = generateUrl('/apps/files_sharing_raw/api/v1/raw-share/' + shareId.value)

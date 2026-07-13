@@ -48,7 +48,7 @@ class RootRouteSupportCheck implements ISetupCheck {
 			$this->l10n->t(
 				'This Nextcloud does not grant files_sharing_raw its root routes yet, '
 				. 'so links use the long /apps/files_sharing_raw/… form as fallback. '
-				. 'Upgrade to Nextcloud 32.0.7 / 33.0.1 or later for the clean /raw/… URLs.'
+				. 'Upgrade to Nextcloud 32.0.7/33.0.1 or later for the clean /raw/… URLs.'
 			)
 		);
 	}
