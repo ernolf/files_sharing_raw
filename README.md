@@ -91,15 +91,9 @@
 
 * [Installation](#installation)
 
-  * [From the Nextcloud App Store](#from-the-nextcloud-app-store)
-  * [Manual installation (release tarball)](#manual-installation-release-tarball)
-  * [Developer setup (from source)](#developer-setup-from-source)
   * [Migrating from the `raw` app](#migrating-from-the-raw-app)
 
 * [Updating](#updating)
-
-  * [Via the Nextcloud App Store](#via-the-nextcloud-app-store)
-  * [Manual update](#manual-update)
 
 ---
 
@@ -774,44 +768,9 @@ For public endpoints, the app returns a minimal `text/plain` **404 Not found** r
 
 ## Installation
 
-### From the Nextcloud App Store
+This app is published in the [App Store](https://apps.nextcloud.com/apps/files_sharing_raw). Install it through [Nextcloud's app management UI](https://docs.nextcloud.com/server/latest/admin_manual/apps_management.html#managing-apps) (**Apps** → search for **Raw Fileserver** → Install) or with `occ app:enable files_sharing_raw`.
 
-The easiest way to install this app is via the Nextcloud App Store:
-
-1. Log into Nextcloud as admin.
-2. Go to **Apps** → search for **Raw Fileserver** → Install.
-
-### Manual installation (release tarball)
-
-1. Download the latest release tarball (`files_sharing_raw.tar.gz`) from the
-   [GitHub Releases page](https://github.com/ernolf/files_sharing_raw/releases).
-2. Extract it into your Nextcloud `/apps` (or `/custom_apps`) folder:
-   ```bash
-   tar -xzf files_sharing_raw.tar.gz -C /path/to/nextcloud/apps/
-   ```
-3. Enable the app:
-   ```bash
-   occ app:enable files_sharing_raw
-   ```
-   or log into Nextcloud as admin and enable it in the Apps list.
-
-### Developer setup (from source)
-
-1. Clone the repository into your Nextcloud `/apps` (or `/custom_apps`) folder:
-   ```bash
-   git clone https://github.com/ernolf/files_sharing_raw
-   cd files_sharing_raw
-   ```
-2. Install frontend dependencies and build the JS bundle:
-   ```bash
-   npm ci
-   npm run build
-   ```
-   The repository ships the [ncmake](https://github.com/ernolf/ncmake) bootstrap Makefile — `make` lists all build, test and release targets (containerized, no PHP or Node needed on the host).
-3. Enable the app:
-   ```bash
-   occ app:enable files_sharing_raw
-   ```
+It is built with [ncmake](https://github.com/ernolf/ncmake). To build and install it from source — release tarball, `make rsync` or `make cp` — see the [installation guide](https://github.com/ernolf/ncmake/blob/main/doc/INSTALL.md).
 
 ### Migrating from the `raw` app
 
@@ -824,27 +783,7 @@ All `raw_*` config keys (`allowed_raw_tokens`, `raw_csp`, etc.) are reused autom
 
 ## Updating
 
-### Via the Nextcloud App Store
-
-Update directly from the Apps page in the Nextcloud admin UI — no manual steps needed.
-
-### Manual update
-
-1. Disable the app:
-   ```bash
-   occ app:disable files_sharing_raw
-   ```
-2. Update the app files — either via
-   - release tarball (see [Manual installation](#manual-installation-release-tarball) above)
-
-   or via  
-   - `git pull` + `npm ci && npm run build` (see [Developer setup (from source)](#developer-setup-from-source))
-
-   in the app directory.
-3. Enable the app again:
-   ```bash
-   occ app:enable files_sharing_raw
-   ```
+Update directly from the Apps page in the Nextcloud admin UI — no manual steps needed. For source-based updates (release tarball, `make rsync` or `make cp`), see the [installation guide](https://github.com/ernolf/ncmake/blob/main/doc/INSTALL.md#updating).
 
 ---
 
