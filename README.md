@@ -7,7 +7,7 @@
 [![REUSE status](https://api.reuse.software/badge/github.com/ernolf/files_sharing_raw)](https://api.reuse.software/info/github.com/ernolf/files_sharing_raw)
 [![Nextcloud App Store](https://img.shields.io/badge/Nextcloud-App_Store-0082c9?logo=nextcloud&logoColor=white)](https://apps.nextcloud.com/apps/files_sharing_raw)
 [![Latest release](https://img.shields.io/github/v/release/ernolf/files_sharing_raw?sort=semver&color=0082c9)](https://github.com/ernolf/files_sharing_raw/releases/latest)
-[![Built with ncmake](https://img.shields.io/badge/built%20with-ncmake-0082c9)](https://github.com/ernolf/ncmake)
+[![built with ncmake](https://cdn.jsdelivr.net/gh/ernolf/ncmake@main/img/ncmake-badge.svg)](https://github.com/ernolf/ncmake)
 
 ---
 ---
