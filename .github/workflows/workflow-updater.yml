@@ -1,0 +1,63 @@
+# SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz <raphael.gradenwitz@googlemail.com>
+# SPDX-License-Identifier: MIT
+#
+# ncmake workflow updater: on a schedule, refreshes the ncmake-managed CI
+# workflows from their upstream templates (make workflows-update) and opens a
+# pull request when anything changed. This replaces Dependabot for the files
+# under .github/workflows/.
+#
+# This workflow changes files under .github/workflows/, which GitHub does not
+# allow the automatic GITHUB_TOKEN to push. It therefore requires a fine-grained
+# PAT stored as the NCMAKE_UPDATE_TOKEN secret (the PAT also lets the update PR
+# run the repository's CI checks). See doc/AUTOUPDATE_WORKFLOW.md and
+# doc/GITHUB_PAT.md.
+
+name: ncmake workflow update
+
+on:
+  schedule:
+    - cron: '30 5 * * *'      # daily 05:30 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ncmake-workflow-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Refresh managed workflows from upstream
+        run: |
+          make dev-init
+          make workflows-update
+
+      - name: Open pull request
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ secrets.NCMAKE_UPDATE_TOKEN || secrets.GITHUB_TOKEN }}
+          branch: ncmake/ci/workflow-update
+          delete-branch: true
+          add-paths: .github/workflows/
+          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          commit-message: |
+            ci: update managed CI workflows from upstream
+
+            Signed-off-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          title: 'ci: update managed CI workflows from upstream'
+          body: |
+            Automated by the ncmake workflow updater.
+
+            `make workflows-update` refreshed the ncmake-managed workflows from
+            their upstream templates (nextcloud/.github + ncmake). Locally
+            modified workflows are left untouched. Review the diff and merge.

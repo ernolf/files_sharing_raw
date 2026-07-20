@@ -73,5 +73,10 @@
     "hash": "3593df9baabc3dd1fc3539143fafa78706de81cf575cd2e6e7f7207ee6fb390f",
     "sha": "4e1a74194ecf76f593564a7c0b35bdb19bd23a58",
     "source": "nextcloud"
+  },
+  "workflow-updater.yml": {
+    "hash": "d59fedd51d28ca54f9da2f731fe6fff779261d984f1b2b218d2a6fceb94744df",
+    "sha": "f850fcebeb0740b5d9d7bb0b330a41eb689d909e",
+    "source": "ncmake"
   }
 }
