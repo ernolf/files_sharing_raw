@@ -4,20 +4,13 @@
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 version: 2
 updates:
-  # GitHub Actions used across the workflow files
-  - package-ecosystem: github-actions
-    directory: "/"
-    schedule:
-      interval: weekly
-    commit-message:
-      prefix: build
-      include: scope
-    cooldown:
-      default-days: 7
-    groups:
-      github-actions:
-        patterns:
-          - "*"
+  # GitHub Actions in .github/workflows/ are intentionally NOT managed by
+  # Dependabot. Those workflow files are installed and updated from their
+  # upstream templates by ncmake (`make workflows-update`), which follows
+  # nextcloud/.github + ncmake. A `github-actions` ecosystem here would fight
+  # that: it edits the same files, so ncmake flags every managed workflow as
+  # locally modified and then stops updating them. Do NOT re-add it.
+  # See ncmake's doc/WORKFLOWS.md.
 
   # PHP: runtime dependency plus the bamarni vendor-bin dev tools
   - package-ecosystem: composer
