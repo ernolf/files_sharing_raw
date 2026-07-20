@@ -6,11 +6,13 @@
 # pull request when anything changed. This replaces Dependabot for the files
 # under .github/workflows/.
 #
-# This workflow changes files under .github/workflows/, which GitHub does not
-# allow the automatic GITHUB_TOKEN to push. It therefore requires a fine-grained
-# PAT stored as the NCMAKE_UPDATE_TOKEN secret (the PAT also lets the update PR
-# run the repository's CI checks). See doc/AUTOUPDATE_WORKFLOW.md and
-# doc/GITHUB_PAT.md.
+# Authentication is a GitHub App (Contents, Pull requests and Workflows: write),
+# minted per run as a short-lived token. The app is required because the default
+# GITHUB_TOKEN may not push workflow files, and it is preferred over a PAT
+# because the same token both pushes the files and produces verified, signed
+# commits. Store its credentials as the NCMAKE_UPDATER_APP_ID and
+# NCMAKE_UPDATER_PRIVATE_KEY secrets. See doc/AUTOUPDATE_WORKFLOW.md and
+# doc/GITHUB_APP.md.
 
 name: ncmake workflow update
 
@@ -20,8 +22,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: ncmake-workflow-update
@@ -31,6 +32,13 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
+      - name: Create app token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.NCMAKE_UPDATER_APP_ID }}
+          private-key: ${{ secrets.NCMAKE_UPDATER_PRIVATE_KEY }}
+
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -44,17 +52,14 @@ jobs:
       - name: Open pull request
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
-          token: ${{ secrets.NCMAKE_UPDATE_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
+          sign-commits: true
+          signoff: true
           branch: ncmake/ci/workflow-update
           delete-branch: true
           add-paths: .github/workflows/
-          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-          commit-message: |
-            ci: update managed CI workflows from upstream
-
-            Signed-off-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           title: 'ci: update managed CI workflows from upstream'
+          commit-message: 'ci: update managed CI workflows from upstream'
           body: |
             Automated by the ncmake workflow updater.
 
