@@ -7,12 +7,11 @@
 
 namespace OCA\FilesSharingRaw\AppInfo;
 
-use OCA\Files\Event\LoadAdditionalScriptsEvent;
 use OCA\FilesSharingRaw\Controller\PrivatePageController;
 use OCA\FilesSharingRaw\Controller\PubPageController;
 use OCA\FilesSharingRaw\Controller\RawShareApiController;
 use OCA\FilesSharingRaw\Db\RawShareMapper;
-use OCA\FilesSharingRaw\Listener\FilesLoadAdditionalScriptsListener;
+use OCA\FilesSharingRaw\Listener\BeforeTemplateRenderedListener;
 use OCA\FilesSharingRaw\Listener\ShareDeletedListener;
 use OCA\FilesSharingRaw\Middleware\ShareRawOnlyMiddleware;
 use OCA\FilesSharingRaw\Service\CspManager;
@@ -23,6 +22,7 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent;
 use OCP\Files\IRootFolder;
 use OCP\IConfig;
 use OCP\IContainer;
@@ -51,8 +51,8 @@ class Application extends App implements IBootstrap {
 	}
 
 	public function register(IRegistrationContext $context): void {
-		// Files sidebar integration
-		$context->registerEventListener(LoadAdditionalScriptsEvent::class, FilesLoadAdditionalScriptsListener::class);
+		// Sharing sidebar integration
+		$context->registerEventListener(BeforeTemplateRenderedEvent::class, BeforeTemplateRenderedListener::class);
 
 		// Cleanup / consistency
 		$context->registerEventListener(ShareDeletedEvent::class, ShareDeletedListener::class);
