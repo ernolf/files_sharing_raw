@@ -7,21 +7,23 @@
 
 namespace OCA\FilesSharingRaw\Listener;
 
-use OCA\Files\Event\LoadAdditionalScriptsEvent;
+use OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\Util;
 
 /**
- * @template-implements IEventListener<LoadAdditionalScriptsEvent>
+ * @template-implements IEventListener<BeforeTemplateRenderedEvent>
  */
-class FilesLoadAdditionalScriptsListener implements IEventListener {
+class BeforeTemplateRenderedListener implements IEventListener {
 	public function handle(Event $event): void {
-		if (!($event instanceof LoadAdditionalScriptsEvent)) {
+		if (!($event instanceof BeforeTemplateRenderedEvent)) {
+			return;
+		}
+		if (!$event->isLoggedIn()) {
 			return;
 		}
 
-		// Load the init script and its extracted styles.
 		Util::addInitScript('files_sharing_raw', 'files_sharing_raw-sharing-sidebar');
 		Util::addStyle('files_sharing_raw', 'files_sharing_raw-sharing-sidebar');
 	}

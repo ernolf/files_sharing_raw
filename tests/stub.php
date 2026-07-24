@@ -23,9 +23,3 @@ namespace OC\Hooks {
 	interface Emitter {
 	}
 }
-
-namespace OCA\Files\Event {
-	// Dispatched by the files app; not part of the OCP package.
-	class LoadAdditionalScriptsEvent extends \OCP\EventDispatcher\Event {
-	}
-}
