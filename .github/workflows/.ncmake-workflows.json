@@ -1,67 +1,67 @@
 {
   "block-unconventional-commits.yml": {
-    "hash": "0265b1456e429e5219b48c4c8aaea726ac60fa24db0d3f3ef68e2c9f04fcbea9",
-    "sha": "bcc722a61824682a2a1538b9e1450e98616d1889",
+    "hash": "e1d854cced0b0bebfb49e695dd706114fa3634c2d1af1b88f480216a21f72efb",
+    "sha": "4972f8bb33dbeef4ff141444c50ad49adf6cb93d",
     "source": "nextcloud"
   },
   "lint-eslint.yml": {
-    "hash": "79abe0326f31b81a8740fa49643550ac22438f832681586757146998b5003d9d",
-    "sha": "df004864472227e9abf1b623998592479e54d03f",
+    "hash": "2c6708da43d71f9e7cdca7e30651925ca0b1846f1aaab311c6b409e419a9851d",
+    "sha": "f84f2768845e9475751ef0b94a80a5c7229acf64",
     "source": "nextcloud"
   },
   "lint-info-xml.yml": {
-    "hash": "072fff135b8965517449e86ebf3853d635f1d997cf430f60d30210f728293ef4",
-    "sha": "e55705222f421f6066ec4df853aab507b955b091",
+    "hash": "629ecc8bed8b31c8271dff087b6d27a0c20abc50ede536cfb6460d7b5ee9b7ed",
+    "sha": "8e6968c9160c9904e43c917e67cb88dd54114e97",
     "source": "nextcloud"
   },
   "lint-php-cs.yml": {
-    "hash": "d8e98ce4e02e20971edac20b3027daed61451bd75588bdf3a57695be00aacbcb",
-    "sha": "0a65977bef92cbd684f8ee5dde415ad7f95ee4f4",
+    "hash": "c3392831e83461f7830381bb611dc7b30e301c13096a30d0d7c03d5b9c4eafce",
+    "sha": "dba0956222e24d8848a85e3b7391d3a7c44ed611",
     "source": "nextcloud"
   },
   "lint-php.yml": {
-    "hash": "c35e63c27843f2012a097bb4b2a7ef622130509e68cde724c53c6b5eb2886863",
-    "sha": "cb2684b245c23c086af88e6bc6fc30a5df038c6e",
+    "hash": "0c7941ebf5bea4684c0ed50bad3266837690b56d4c298056b047e6b4905f9119",
+    "sha": "e73949e050a6e962a58662c778fca1e5e507588c",
     "source": "nextcloud"
   },
   "lint-stylelint.yml": {
-    "hash": "1db540090116ea1928ae2bcf6fee0db14f0253aeb4c4958803b72efed8283c91",
-    "sha": "9f87c15de0f0afed1c3527dd10bfc1dd0a9c8a5a",
+    "hash": "e66e5c0b4ff2cf6741a1891849ea3de8662c77c6d198131e0cf54ab2a82cccf7",
+    "sha": "e4b26b58587886ee60299124591b46be8e28323e",
     "source": "nextcloud"
   },
   "node-test.yml": {
-    "hash": "4b6a9809a78fa898a9c48223cb55244fd27803ec8b0352ccac6cff6ea672ef7f",
-    "sha": "95a224f583f50cd012c76a533500df4d8a333f59",
+    "hash": "41d1f6cf09cf13748ea7f8c1fffbacfa069f36fde21d2aa7459eea5617093202",
+    "sha": "8a8619ecb1e7c4ea57b98695b9a2895422b06812",
     "source": "nextcloud"
   },
   "npm-build.yml": {
-    "hash": "c31f26504032b28b2edd55c3294fec51348a31bbc8f23fe3b3c670adb50b32cf",
-    "sha": "f596c3972780ea52e8563949597b69c058fb025a",
+    "hash": "bc8cda49479baa57d54d9f8c90846751103f849be48831f12f0b655fd4245d14",
+    "sha": "1b9e3724e58a48522a1a299f3122456eb429f6d5",
     "source": "nextcloud"
   },
   "phpunit-mysql.yml": {
-    "hash": "2fd3d617860ce73b5a6c0e2d0cb3c2bb3125425a1cc662e07c4a9fbd2b3655ca",
-    "sha": "ca7b6a5a01ee4111e5b36fb5328727656f4e8b71",
+    "hash": "30d58e6146492e6ee992e9b327e58f1700318dbaa1c377bc78f30c61bfed3aec",
+    "sha": "40f41ae5dc91d9bdd930a3cd4d105dec807892e7",
     "source": "nextcloud"
   },
   "phpunit-oci.yml": {
-    "hash": "ab8a11cc23a483788c0302b58b84704a9a88c46c69f8c91611e62f53e836d00d",
-    "sha": "81d32f6d6bd2d35223ab3b76f349e04010ff1a70",
+    "hash": "37386cbad609e9191062101ac3d3c8a424039fd206217923aba04416f8a2ebac",
+    "sha": "3363620c924da907819c297672aa8d70d3b27335",
     "source": "nextcloud"
   },
   "phpunit-pgsql.yml": {
-    "hash": "da926241e75fddc51f2508478d054905f540450406cf50eb23edcc33650523da",
-    "sha": "08a22b306893002484bf6c4f19da0264ed672e17",
+    "hash": "5eacac2095265756b98783b5b24ffb426d4dac0ac64f36081a498728511a5391",
+    "sha": "6f1ba6c927f3f6f9c383b3ff20cdc8844c17bbc7",
     "source": "nextcloud"
   },
   "phpunit-sqlite.yml": {
-    "hash": "cd4ec3d1bab6791dca7748cad74d8d23ec3b9311a7f47312a0cd3e1857c67f32",
-    "sha": "cf14715044743f2d61dffd65a03f231b9a0e48d6",
+    "hash": "f0f58e1290630e7ad0c783e06e8af92d20f630f3f8fcc8d2133c489e626ee715",
+    "sha": "cb994fc9014e374779fcf6f88d26d07d518051c4",
     "source": "nextcloud"
   },
   "psalm.yml": {
-    "hash": "3cc569bb779c95a6c612aa5f0946c5df373fddfcd9899b514c7d269bffd3e9cb",
-    "sha": "4feadcb8fad77932706c100663577dca7c0b44d8",
+    "hash": "470a7b9ced6e10aeb3ce8e06ed58db7f9d378d426434a7c290ab563f7caef6d4",
+    "sha": "eafcfeb518842ddfb440de2f8b058cd72750e96c",
     "source": "nextcloud"
   },
   "release.yml": {
@@ -70,8 +70,8 @@
     "source": "ncmake"
   },
   "reuse.yml": {
-    "hash": "3593df9baabc3dd1fc3539143fafa78706de81cf575cd2e6e7f7207ee6fb390f",
-    "sha": "4e1a74194ecf76f593564a7c0b35bdb19bd23a58",
+    "hash": "7507fa539b8cdec70a5de786fbac4e38f1e53f9df404dbfc75bb2fe7950bc010",
+    "sha": "67fdafc440e24937ece9f2f16d7f2c2df2c7efa5",
     "source": "nextcloud"
   },
   "workflow-updater.yml": {
