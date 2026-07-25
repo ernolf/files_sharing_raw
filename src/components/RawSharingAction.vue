@@ -488,6 +488,13 @@ watch(enabled, (val) => {
 	height: 24px;
 }
 
+/* The enlarged 24px icon leaves the inline label sitting too low; lift it back
+   to the icon's center. transform has no effect on inline spans, so position. */
+.rawAction :deep(.checkbox-content__text) {
+	position: relative;
+	top: -4px;
+}
+
 /* --- Raw link list (resets browser ul defaults) --- */
 .rawAction__link-list {
 	list-style: none;
@@ -528,6 +535,14 @@ watch(enabled, (val) => {
 	display: flex;
 	align-items: center;
 	margin-inline-start: auto;
+}
+
+/* Lift avatar, copy button and menu to the "Raw link" label's height; the label
+   itself stays put. */
+.rawAction__link-entry .sharing-entry__avatar,
+.rawAction__link-entry .sharing-entry__actions {
+	position: relative;
+	top: -8px;
 }
 
 /* Blue avatar background — matches files_sharing link share style */
