@@ -10,7 +10,7 @@
 # minted per run as a short-lived token. The app is required because the default
 # GITHUB_TOKEN may not push workflow files, and it is preferred over a PAT
 # because the same token both pushes the files and produces verified, signed
-# commits. Store its credentials as the NCMAKE_UPDATER_APP_ID and
+# commits. Store its credentials as the NCMAKE_UPDATER_CLIENT_ID and
 # NCMAKE_UPDATER_PRIVATE_KEY secrets. See doc/AUTOUPDATE_WORKFLOW.md and
 # doc/GITHUB_APP.md.
 
@@ -18,7 +18,11 @@ name: ncmake workflow update
 
 on:
   schedule:
-    - cron: '30 5 * * *'      # daily 05:30 UTC
+    # Daily at 05:30 UTC. GitHub starts scheduled runs on a best-effort basis and
+    # delays them under load, so expect this a few hours late, not on the minute
+    # (see doc/AUTOUPDATE_WORKFLOW.md). Trigger workflow_dispatch to run without
+    # waiting for the schedule.
+    - cron: '30 5 * * *'
   workflow_dispatch:
 
 permissions:
@@ -36,7 +40,7 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
-          app-id: ${{ secrets.NCMAKE_UPDATER_APP_ID }}
+          client-id: ${{ secrets.NCMAKE_UPDATER_CLIENT_ID }}
           private-key: ${{ secrets.NCMAKE_UPDATER_PRIVATE_KEY }}
 
       - name: Checkout
