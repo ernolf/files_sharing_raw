@@ -770,7 +770,7 @@ For public endpoints, the app returns a minimal `text/plain` **404 Not found** r
 
 This app is published in the [App Store](https://apps.nextcloud.com/apps/files_sharing_raw). Install it through [Nextcloud's app management UI](https://docs.nextcloud.com/server/latest/admin_manual/apps_management.html#managing-apps) (**Apps** → search for **Raw Fileserver** → Install) or with `occ app:enable files_sharing_raw`.
 
-It is built with [ncmake](https://github.com/ernolf/ncmake). To build and install it from source — release tarball, `make rsync` or `make cp` — see the [installation guide](https://github.com/ernolf/ncmake/blob/main/doc/INSTALL.md).
+It is built with [ncmake](https://github.com/ernolf/ncmake). To build and install it from source — release tarball, `make rsync` or `make cp` — see the [installation guide](https://github.com/ernolf/ncmake/wiki/Installation).
 
 ### Migrating from the `raw` app
 
@@ -783,7 +783,7 @@ All `raw_*` config keys (`allowed_raw_tokens`, `raw_csp`, etc.) are reused autom
 
 ## Updating
 
-Update directly from the Apps page in the Nextcloud admin UI — no manual steps needed. For source-based updates (release tarball, `make rsync` or `make cp`), see the [installation guide](https://github.com/ernolf/ncmake/blob/main/doc/INSTALL.md#updating).
+Update directly from the Apps page in the Nextcloud admin UI — no manual steps needed. For source-based updates (release tarball, `make rsync` or `make cp`), see the [installation guide](https://github.com/ernolf/ncmake/wiki/Installation#-updating).
 
 ---
 
