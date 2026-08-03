@@ -4,7 +4,8 @@
 # ncmake workflow updater: on a schedule, refreshes the ncmake-managed CI
 # workflows from their upstream templates (make workflows-update) and opens a
 # pull request when anything changed. This replaces Dependabot for the files
-# under .github/workflows/.
+# under .github/workflows/. Once that pull request is merged it deletes its own
+# branch, so no stale ncmake/ci/workflow-update branch is left behind.
 #
 # Authentication is a GitHub App (Contents, Pull requests and Workflows: write),
 # minted per run as a short-lived token. The app is required because the default
@@ -24,6 +25,11 @@ on:
     # waiting for the schedule.
     - cron: '30 5 * * *'
   workflow_dispatch:
+  # React to a merge so the cleanup job can remove the updater's own branch.
+  # This fires for every closed pull request in the repository; the cleanup job
+  # filters down to a merged ncmake/ci/workflow-update.
+  pull_request:
+    types: [closed]
 
 permissions:
   contents: read
@@ -34,6 +40,9 @@ concurrency:
 
 jobs:
   update:
+    # The scheduled/manual side: refresh the workflows and open the pull request.
+    # Skipped for the pull_request trigger, which only drives the cleanup job.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Create app token
@@ -70,3 +79,31 @@ jobs:
             `make workflows-update` refreshed the ncmake-managed workflows from
             their upstream templates (nextcloud/.github + ncmake). Locally
             modified workflows are left untouched. Review the diff and merge.
+
+  cleanup:
+    # Delete the updater's own branch as soon as its pull request is merged,
+    # instead of leaving it until the next scheduled run removes it (which is
+    # what create-pull-request's delete-branch does). It uses the same GitHub
+    # App as the update job, so it always has Contents: write regardless of the
+    # repository's default token permissions. This only ever touches
+    # ncmake/ci/workflow-update, and is unrelated to the repository-wide
+    # "Automatically delete head branches" setting (see doc/DELETE_MERGED_BRANCHES.md).
+    if: >-
+      github.event_name == 'pull_request'
+      && github.event.pull_request.merged == true
+      && github.event.pull_request.head.ref == 'ncmake/ci/workflow-update'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create app token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.NCMAKE_UPDATER_CLIENT_ID }}
+          private-key: ${{ secrets.NCMAKE_UPDATER_PRIVATE_KEY }}
+
+      - name: Delete the merged updater branch
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh api --method DELETE \
+            "repos/${{ github.repository }}/git/refs/heads/ncmake/ci/workflow-update"
