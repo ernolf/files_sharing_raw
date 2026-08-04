@@ -12,8 +12,9 @@
 # GITHUB_TOKEN may not push workflow files, and it is preferred over a PAT
 # because the same token both pushes the files and produces verified, signed
 # commits. Store its credentials as the NCMAKE_UPDATER_CLIENT_ID and
-# NCMAKE_UPDATER_PRIVATE_KEY secrets. See doc/AUTOUPDATE_WORKFLOW.md and
-# doc/GITHUB_APP.md.
+# NCMAKE_UPDATER_PRIVATE_KEY secrets. See
+# https://github.com/ernolf/ncmake/wiki/Workflow-updater and
+# https://github.com/ernolf/ncmake/wiki/GitHub-App.
 
 name: ncmake workflow update
 
@@ -21,7 +22,8 @@ on:
   schedule:
     # Daily at 05:30 UTC. GitHub starts scheduled runs on a best-effort basis and
     # delays them under load, so expect this a few hours late, not on the minute
-    # (see doc/AUTOUPDATE_WORKFLOW.md). Trigger workflow_dispatch to run without
+    # (see https://github.com/ernolf/ncmake/wiki/Workflow-updater). Trigger
+    # workflow_dispatch to run without
     # waiting for the schedule.
     - cron: '30 5 * * *'
   workflow_dispatch:
@@ -87,7 +89,8 @@ jobs:
     # App as the update job, so it always has Contents: write regardless of the
     # repository's default token permissions. This only ever touches
     # ncmake/ci/workflow-update, and is unrelated to the repository-wide
-    # "Automatically delete head branches" setting (see doc/DELETE_MERGED_BRANCHES.md).
+    # "Automatically delete head branches" setting
+    # (see https://github.com/ernolf/ncmake/wiki/Deleting-merged-branches).
     if: >-
       github.event_name == 'pull_request'
       && github.event.pull_request.merged == true
@@ -101,9 +104,18 @@ jobs:
           client-id: ${{ secrets.NCMAKE_UPDATER_CLIENT_ID }}
           private-key: ${{ secrets.NCMAKE_UPDATER_PRIVATE_KEY }}
 
-      - name: Delete the merged updater branch
+      - name: Delete the merged updater branch if it is still there
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          gh api --method DELETE \
-            "repos/${{ github.repository }}/git/refs/heads/ncmake/ci/workflow-update"
+          ref="repos/${{ github.repository }}/git/refs/heads/ncmake/ci/workflow-update"
+          # The repository's "Automatically delete head branches" setting, or a
+          # fast-clicking admin, may have removed the branch already. Only delete
+          # what is still there, and tolerate it vanishing between the check and
+          # the delete, so a redundant run is a quiet no-op, not a failure.
+          if gh api "$ref" >/dev/null 2>&1; then
+            gh api --method DELETE "$ref" \
+              || echo "Branch was removed concurrently; nothing to do."
+          else
+            echo "Branch already deleted; nothing to do."
+          fi

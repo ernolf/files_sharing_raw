@@ -4,7 +4,8 @@
 # ncmake branch cleanup: when a pull request is merged, delete its head branch
 # if it is still there. This is the workflow-shipped equivalent of the
 # repository "Automatically delete head branches" setting (see
-# doc/DELETE_MERGED_BRANCHES.md): unlike that per-repository toggle it travels
+# https://github.com/ernolf/ncmake/wiki/Deleting-merged-branches): unlike that
+# per-repository toggle it travels
 # with the repository through `make workflows-install`, so a repository gets the
 # cleanup even when no admin has flipped the setting. Running both is harmless:
 # whichever removes the branch first wins and the other is a quiet no-op.
