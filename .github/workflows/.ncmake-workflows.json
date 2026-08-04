@@ -5,8 +5,8 @@
     "source": "nextcloud"
   },
   "branch-cleanup.yml": {
-    "hash": "2b3011daceeab1eb43062f8096d559829f0fc387688298f8977b77deb7975399",
-    "sha": "5fee38eb16b76634495d19760bb4299ea258fd18",
+    "hash": "621cfd0244b8b94188ec6c525093eff06b11475d5e866ead7ee11b02b589591a",
+    "sha": "0a5957bffde5b7b2e4d33f6dae5f75c982ee93e6",
     "source": "ncmake"
   },
   "lint-eslint.yml": {
@@ -80,8 +80,8 @@
     "source": "nextcloud"
   },
   "workflow-updater.yml": {
-    "hash": "8461d0138be309fe7efb500b7ecf044be88f9138199241f41a7d4ecad37dced0",
-    "sha": "1adddbae13390821da9dd50c8fbedcb16290da18",
+    "hash": "51db7ca85627ed5b4641677a577672df724936608152e3a36eef9f90da36e100",
+    "sha": "d81ef339dca007a84367431100725c64b7de2c74",
     "source": "ncmake"
   }
 }
