@@ -18,7 +18,7 @@
 		"@nextcloud/eslint-config": "^9.0.0",
 		"@nextcloud/stylelint-config": "^3.2.2",
 		"@nextcloud/vite-config": "^2.5.4",
-		"@noble/hashes": "^2.2.0",
+		"@noble/hashes": "^2.3.0",
 		"@vitejs/plugin-vue": "^6.0.8",
 		"@vue/test-utils": "^2.4.6",
 		"jsdom": "^29.1.1",
@@ -33,7 +33,7 @@
 		"@nextcloud/router": "^3.1.0",
 		"@nextcloud/sharing": "^0.4.0",
 		"@nextcloud/vue": "^9.9.0",
-		"vue": "^3.5.40",
+		"vue": "^3.5.41",
 		"vue-material-design-icons": "^5.3.1"
 	},
 	"browserslist": [
