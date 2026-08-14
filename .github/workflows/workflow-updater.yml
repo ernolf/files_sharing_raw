@@ -60,6 +60,12 @@ jobs:
           persist-credentials: false
 
       - name: Refresh managed workflows from upstream
+        env:
+          # 'make dev-init' lists the ncmake modules through the GitHub API, and
+          # an anonymous call gets 60 requests per hour counted per source IP --
+          # shared by every job on a hosted runner, so it answers 403 every so
+          # often and fails the step. The app token is already minted above.
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           make dev-init
           make workflows-update
