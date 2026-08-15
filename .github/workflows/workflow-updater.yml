@@ -7,6 +7,12 @@
 # under .github/workflows/. Once that pull request is merged it deletes its own
 # branch, so no stale ncmake/ci/workflow-update branch is left behind.
 #
+# A comment of "@ncmake-updater rebase" on a pull request re-runs the update
+# job, which is all a rebase needs here: the job checks out the default branch,
+# regenerates the workflows and lets create-pull-request rebuild the branch from
+# that base. Going through the API is what keeps the commit verified -- a git
+# rebase in the runner would push unsigned commits, because no key lives there.
+#
 # Authentication is a GitHub App (Contents, Pull requests and Workflows: write),
 # minted per run as a short-lived token. The app is required because the default
 # GITHUB_TOKEN may not push workflow files, and it is preferred over a PAT
@@ -32,6 +38,11 @@ on:
   # filters down to a merged ncmake/ci/workflow-update.
   pull_request:
     types: [closed]
+  # "@ncmake-updater rebase" in a pull request comment. issue_comment fires for
+  # every comment in the repository, plain issues included; the update job
+  # filters down to pull request comments that carry the command.
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: read
@@ -44,8 +55,28 @@ jobs:
   update:
     # The scheduled/manual side: refresh the workflows and open the pull request.
     # Skipped for the pull_request trigger, which only drives the cleanup job.
-    if: github.event_name != 'pull_request'
+    #
+    # The command is answered wherever it is written: the updater owns a single
+    # pull request, so a comment addressed to it can only mean that one. Who may
+    # ask is what matters, and that is the author association -- without it any
+    # passer-by could force-push the branch.
+    if: >-
+      github.event_name == 'schedule'
+      || github.event_name == 'workflow_dispatch'
+      || (
+        github.event_name == 'issue_comment'
+        && github.event.issue.pull_request
+        && contains(github.event.comment.body, '@ncmake-updater rebase')
+        && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
+          github.event.comment.author_association)
+      )
     runs-on: ubuntu-latest
+    # Reacting to the comment is the only thing the default token is used for
+    # here; everything that touches the repository runs on the app token.
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
     steps:
       - name: Create app token
         id: app-token
@@ -53,6 +84,15 @@ jobs:
         with:
           client-id: ${{ secrets.NCMAKE_UPDATER_CLIENT_ID }}
           private-key: ${{ secrets.NCMAKE_UPDATER_PRIVATE_KEY }}
+
+      - name: Acknowledge the command
+        if: github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST \
+            "repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions" \
+            -f content=eyes
 
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -87,6 +127,22 @@ jobs:
             `make workflows-update` refreshed the ncmake-managed workflows from
             their upstream templates (nextcloud/.github + ncmake). Locally
             modified workflows are left untouched. Review the diff and merge.
+
+            ---
+
+            Commands, written as a comment on this pull request:
+
+            - `@ncmake-updater rebase` rebuilds this branch on top of the
+              current base
+
+      - name: Report the command as done
+        if: github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST \
+            "repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions" \
+            -f content=rocket
 
   cleanup:
     # Delete the updater's own branch as soon as its pull request is merged,
