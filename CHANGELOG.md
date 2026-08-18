@@ -9,6 +9,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.2] - 2026-08-18
+
+### Fixed
+
+- Keep the stored CSP when a share is updated (#54)
+
+[0.7.2]: https://github.com/ernolf/files_sharing_raw/releases/tag/v0.7.2
+
 ## [0.7.1] - 2026-07-25
 
 ### Fixed
