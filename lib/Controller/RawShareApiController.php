@@ -99,10 +99,10 @@ class RawShareApiController extends Controller {
 		$rawOnly = $this->toBool($this->request->getParam('rawOnly', false));
 
 		if ($this->canCurrentUserEditCsp()) {
-			// User is allowed to change the CSP.
+			// Absent csp means unchanged, an empty string means clear.
 			$csp = $this->request->getParam('csp', null);
-			if ($csp !== null && !is_string($csp)) {
-				$csp = null;
+			if ($csp === null || !is_string($csp)) {
+				$csp = $this->registry->getStoredCsp($shareId);
 			}
 		} else {
 			// User is not in the CSP editor group — preserve whatever is stored.
