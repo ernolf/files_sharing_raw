@@ -21,10 +21,10 @@
 		"@noble/hashes": "^2.3.0",
 		"@vitejs/plugin-vue": "^6.0.8",
 		"@vue/test-utils": "^2.4.6",
-		"jsdom": "^29.1.1",
+		"jsdom": "^30.0.0",
 		"stylelint": "^17.14.1",
 		"vite": "^7.1.10",
-		"vitest": "^4.1.4"
+		"vitest": "^4.1.11"
 	},
 	"dependencies": {
 		"@nextcloud/axios": "^2.6.0",
