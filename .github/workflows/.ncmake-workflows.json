@@ -20,13 +20,13 @@
     "source": "nextcloud"
   },
   "lint-php-cs.yml": {
-    "hash": "87c108785a9fcb13c4d2f0b51709d3cce87711f4a53a118264d80ce682d63701",
-    "sha": "80292fb9b28aee7a6159f647a5cef5548c7492ae",
+    "hash": "e6047b215571aa2746bd3d2786a14b3e0122fc34e70755a29ff573bb21e1672c",
+    "sha": "06d0842fda7cde32f228dd9e64e5109d80b2adcf",
     "source": "nextcloud"
   },
   "lint-php.yml": {
-    "hash": "18eff04bee02cd48d97f47ebe794c7947e348153bdfa139b795874767a0ba85c",
-    "sha": "7e32f01305715fb81b16d63d8513f5ef07c3f7e4",
+    "hash": "4bd624d81366d349e2ae5895b610000534306db21e54870aec05a0ab622c8b01",
+    "sha": "e4c6e9ba63262bce9385f6ee430129c67defd0c3",
     "source": "nextcloud"
   },
   "lint-stylelint.yml": {
@@ -45,28 +45,28 @@
     "source": "nextcloud"
   },
   "phpunit-mysql.yml": {
-    "hash": "e8e94097f8c1afd2488d23db76e60ee5df1fb03e6fb4855c3a22934a069ad8e4",
-    "sha": "6bc907cd8dafebe5e458de6c3f882b1adedd6802",
+    "hash": "a634885f730bd3ccde504120e304315b2eda6d763b7e88ceb9fb8d8918881e4f",
+    "sha": "38c1bb3c4c331ff05d7348db63b82732cc342e80",
     "source": "nextcloud"
   },
   "phpunit-oci.yml": {
-    "hash": "0511cd1d4f418baa215ffbc4adfc3feb6438cd8235ae76368839d0d2ed8ad357",
-    "sha": "cd348eee4c05fc2a519d529f0f6fd1a42831fde1",
+    "hash": "11553b98b3dad9898a79f399730cf5c0d95a0d9cd987db46ed3cba9ae3cc3b8f",
+    "sha": "a30ffbeaecb66f2366d7b9d6e2d3e7b0698bf2b1",
     "source": "nextcloud"
   },
   "phpunit-pgsql.yml": {
-    "hash": "b9654d23e47fde141d242cc94db251ef129a93393f4bf5460dcc7ed2f826b2f6",
-    "sha": "627d85b5b53952274a9230738b70fe3f751aee80",
+    "hash": "c87cdc2172621975cd8627b02485cea3db326fbfa7f882e0b21b3e3907e5908b",
+    "sha": "6029cd78db3ab7cd0dede536d75812f2309d8f09",
     "source": "nextcloud"
   },
   "phpunit-sqlite.yml": {
-    "hash": "99f063a5e2dcb82fb0d9de95b9283410858e81185b21d0b6f22b86ac58b5d9ea",
-    "sha": "1a14ed65277651546843021fbfd0cb7ebd103a4d",
+    "hash": "2b1fb4d11f706940b62e8ff883f66498473abef96d72dcbc4489a211d6cf6ec3",
+    "sha": "f4c2fb477628636e4d8b4f2f9be06bcf99140021",
     "source": "nextcloud"
   },
   "psalm.yml": {
-    "hash": "48fa18bbd15fbc26d7155bc8912ac77f2a07c53ca7e0312790b83dce86f0185b",
-    "sha": "1e308191f9c857552b9ae3eb4341cccaa4342a87",
+    "hash": "02d1db3a1549f5fa933b7157fc1a18d4b4593b35745a1f18be3f49e6e0499bd8",
+    "sha": "d6e2d52f35742a6351cd571e092bd849397eae6a",
     "source": "nextcloud"
   },
   "release.yml": {
