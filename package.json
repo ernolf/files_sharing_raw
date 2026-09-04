@@ -18,22 +18,22 @@
 		"@nextcloud/eslint-config": "^9.0.0",
 		"@nextcloud/stylelint-config": "^3.2.2",
 		"@nextcloud/vite-config": "^2.5.4",
-		"@noble/hashes": "^2.3.0",
+		"@noble/hashes": "^2.4.0",
 		"@vitejs/plugin-vue": "^6.0.8",
-		"@vue/test-utils": "^2.4.6",
-		"jsdom": "^30.0.0",
+		"@vue/test-utils": "^2.5.0",
+		"jsdom": "^30.0.1",
 		"stylelint": "^17.14.1",
 		"vite": "^7.1.10",
 		"vitest": "^4.1.11"
 	},
 	"dependencies": {
 		"@nextcloud/axios": "^2.6.0",
-		"@nextcloud/dialogs": "^7.4.1",
+		"@nextcloud/dialogs": "^7.5.0",
 		"@nextcloud/l10n": "^3.4.1",
 		"@nextcloud/router": "^3.1.0",
 		"@nextcloud/sharing": "^0.4.0",
-		"@nextcloud/vue": "^9.9.0",
-		"vue": "^3.5.41",
+		"@nextcloud/vue": "^9.10.0",
+		"vue": "^3.5.42",
 		"vue-material-design-icons": "^5.3.1"
 	},
 	"browserslist": [
