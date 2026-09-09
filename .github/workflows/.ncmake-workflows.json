@@ -45,23 +45,23 @@
     "source": "nextcloud"
   },
   "phpunit-mysql.yml": {
-    "hash": "a634885f730bd3ccde504120e304315b2eda6d763b7e88ceb9fb8d8918881e4f",
-    "sha": "38c1bb3c4c331ff05d7348db63b82732cc342e80",
+    "hash": "48f103bd51a077b1e1095399e582ed68a374bc0e6f7fe38569b6860419432929",
+    "sha": "a7d98c9cfe23c84edb8f52d546c11e06cffed97a",
     "source": "nextcloud"
   },
   "phpunit-oci.yml": {
-    "hash": "11553b98b3dad9898a79f399730cf5c0d95a0d9cd987db46ed3cba9ae3cc3b8f",
-    "sha": "a30ffbeaecb66f2366d7b9d6e2d3e7b0698bf2b1",
+    "hash": "6ee1d762fddbe0105674a3771f4f927b0f0b57a1d40dd59c6bdd38ecb75bb041",
+    "sha": "f3b17ff8fb56c40a898562ca93085c61175c1cb5",
     "source": "nextcloud"
   },
   "phpunit-pgsql.yml": {
-    "hash": "c87cdc2172621975cd8627b02485cea3db326fbfa7f882e0b21b3e3907e5908b",
-    "sha": "6029cd78db3ab7cd0dede536d75812f2309d8f09",
+    "hash": "9caf1fdec2a774c09d3ac2aef5327786f5b3e11763b46102b99810789090f075",
+    "sha": "0d63f7dad1b30b9b82a5f0cb33d8421eb7f26f14",
     "source": "nextcloud"
   },
   "phpunit-sqlite.yml": {
-    "hash": "2b1fb4d11f706940b62e8ff883f66498473abef96d72dcbc4489a211d6cf6ec3",
-    "sha": "f4c2fb477628636e4d8b4f2f9be06bcf99140021",
+    "hash": "8faa6c1b5b6d585c769dd1e521b4f25bbc05ef4a3d152cceb7a9557828a63fa5",
+    "sha": "d6bcf8e7bb1d92e14aaf6c9b040225f6ede93a21",
     "source": "nextcloud"
   },
   "psalm.yml": {
