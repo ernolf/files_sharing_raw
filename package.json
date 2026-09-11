@@ -32,7 +32,7 @@
 		"@nextcloud/l10n": "^3.4.1",
 		"@nextcloud/router": "^3.1.0",
 		"@nextcloud/sharing": "^0.4.0",
-		"@nextcloud/vue": "^9.10.0",
+		"@nextcloud/vue": "^9.11.0",
 		"vue": "^3.5.42",
 		"vue-material-design-icons": "^5.3.1"
 	},
