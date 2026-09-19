@@ -133,6 +133,21 @@ class CspManagerTest extends TestCase {
 		self::assertSame("default-src 'self'", $this->manager->determineCspForRequest($this->fileNode()));
 	}
 
+	public function testDbCspIsUsedWithoutAnyRawCspConfig(): void {
+		$_SERVER['REQUEST_URI'] = '/raw/aBc123/file.txt';
+		$this->withRawCsp([]);
+
+		$share = $this->createMock(IShare::class);
+		$share->method('getShareType')->willReturn(IShare::TYPE_LINK);
+		$share->method('getId')->willReturn('42');
+		$this->shareManager->method('getShareByToken')->with('aBc123')->willReturn($share);
+		$this->registry->method('isEnabled')->with(42)->willReturn(true);
+		$this->registry->method('getCsp')->with(42)->willReturn("default-src 'self'");
+
+		// the per-share override does not depend on raw_csp being configured at all
+		self::assertSame("default-src 'self'", $this->manager->determineCspForRequest($this->fileNode()));
+	}
+
 	public function testDbCspIsIgnoredForDisabledShares(): void {
 		$_SERVER['REQUEST_URI'] = '/raw/aBc123/file.txt';
 		$this->withRawCsp(['extension' => ['txt' => 'img-src data:']]);
