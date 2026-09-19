@@ -65,11 +65,10 @@ class CspManager {
 	public function determineCspForRequest($fileNode) {
 		$hardFallback = $this->hardFallback;
 
-		// Read admin-provided raw_csp from Nextcloud system config (always read fresh)
+		// Read admin-provided raw_csp from Nextcloud system config (always read fresh).
+		// Never shortcut an empty raw_csp here: the per-share override is stored in the
+		// database and is read below, independent of the system config.
 		$rawCsp = (array)$this->configService->getSystemValue('raw_csp', []);
-		if (count($rawCsp) === 0) {
-			return $hardFallback;
-		}
 
 		// extract selectors from the configured array (safe defaults to empty arrays)
 		$tokens = $rawCsp['token'] ?? [];
