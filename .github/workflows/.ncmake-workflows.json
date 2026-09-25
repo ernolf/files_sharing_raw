@@ -35,8 +35,8 @@
     "source": "nextcloud"
   },
   "node-test.yml": {
-    "hash": "6d88f83be3cba8e6373a3d07411c0b6a80b0554056975dce719e8c9f817e1943",
-    "sha": "1b74d3e4eda159598431c71d90a3cd2dcede5062",
+    "hash": "a83ba0a1799ba697ee7ab264071034604939b098f09b4751ebad731a93ec673a",
+    "sha": "aa5dcffed13385542c02cde014beefd1fc5ab3aa",
     "source": "nextcloud"
   },
   "npm-build.yml": {
