@@ -13,6 +13,13 @@ name: Release tarball
 # attaches it as a release asset. workflow_dispatch produces a downloadable
 # artifact for testing without publishing a release. No secrets, no App Store
 # upload: the store later only receives the download URL and a signature.
+#
+# appinfo/signature.json is not produced here. It is signed at tag time on the
+# maintainer's machine, where the key is, and travels in a secret gist whose id the
+# signed tag message names. This job reads it from there without any token and
+# verifies it against the certificate committed as .ncmake/certificate.crt before
+# it packs, so a runner build that does not match the signed one fails the release
+# instead of shipping.
 
 on:
   release:
@@ -30,9 +37,43 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
+          # The tag object itself: its message carries the gist id, and its date
+          # the age reported below.
+          fetch-depth: 0
+
+      - name: Report the age of the tag
+        if: github.event_name == 'release'
+        run: |
+          created=$(git for-each-ref --format='%(creatordate:iso-strict)' "refs/tags/${GITHUB_REF_NAME}")
+          days=$(( ( $(date -u +%s) - $(date -u -d "${created}" +%s) ) / 86400 ))
+          # The signature only matches while the build is still reproducible from
+          # the tag. Age is the plainest sign that it may no longer be.
+          echo "Tag \`${GITHUB_REF_NAME}\` was created ${created}, ${days} day(s) ago." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fetch the signature named in the tag
+        if: github.event_name == 'release'
+        run: |
+          id=$(git for-each-ref --format='%(contents)' "refs/tags/${GITHUB_REF_NAME}" | sed -n 's/^ncmake-signature: *//p' | head -1)
+          if [ -z "${id}" ]; then
+            if [ -f .ncmake/certificate.crt ]; then
+              echo "::error::the tag names no signature, but .ncmake/certificate.crt marks this app as signed - an unsigned tarball is not attached"
+              exit 1
+            fi
+            echo "The tag names no signature and the app is not marked as signed." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          raw=$(curl -fsSL "https://api.github.com/gists/${id}" | python3 -c 'import json,sys;print(json.load(sys.stdin)["files"]["signature.json"]["raw_url"])')
+          curl -fsSL "${raw}" -o appinfo/signature.json
+          echo "SIGNED=1" >> "$GITHUB_ENV"
+          echo "Signature taken from gist \`${id}\`." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build the release tarball
-        run: make build && make dist
+        # With a signature: integrity-check holds the staged tree against it - the
+        # hashes recomputed file by file and the signature checked against the
+        # committed certificate - and dist packs that same staged tree.
+        run: |
+          make build
+          if [ -n "${SIGNED:-}" ]; then make integrity-check dist; else make dist; fi
 
       - name: Locate the tarball
         run: echo "TARBALL=$(ls build/artifacts/dist/*.tar.gz)" >> "$GITHUB_ENV"
