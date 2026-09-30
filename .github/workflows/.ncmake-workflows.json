@@ -75,8 +75,8 @@
     "source": "nextcloud"
   },
   "release.yml": {
-    "hash": "cdb4486ee5732e4a5d834c7e57eac808eb0d1e4ce22af7a00cea3ca260355056",
-    "sha": "0cd0c3e40145e41d6043d72bc07920a5ebb4acb8",
+    "hash": "8c4de5bd59955ce652be722125192e975c6084b97534389f7ac604688d3dc2eb",
+    "sha": "d88a3f0ea9ce8a670fbc5b8ce47f6c2236eba911",
     "source": "ncmake"
   },
   "reuse.yml": {
