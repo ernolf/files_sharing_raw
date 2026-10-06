@@ -9,6 +9,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-10-06
+
+### Added
+
+- Choose the CSP editor group in the admin settings (#89)
+
+### Changed
+
+- Require Nextcloud 34 and PHP 8.2 (#92)
+- Legacy URLs under /apps/files_sharing_raw/ always redirect to /raw/ with 307, and the setup check for cores without root routes is gone (#96)
+
+### Fixed
+
+- Register services through IRegistrationContext for Nextcloud 36 (#87)
+- Point the raw-public-url route at PublicUrlController (#97)
+
+[0.8.0]: https://github.com/ernolf/files_sharing_raw/releases/tag/v0.8.0
+
 ## [0.7.3] - 2026-09-19
 
 ### Fixed
