@@ -25,13 +25,13 @@ use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent;
 use OCP\Files\IRootFolder;
 use OCP\IConfig;
-use OCP\IContainer;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
 use OCP\Share\Events\ShareDeletedEvent;
 use OCP\Share\IManager;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 class Application extends App implements IBootstrap {
@@ -44,13 +44,12 @@ class Application extends App implements IBootstrap {
 	 */
 	public function __construct(array $urlParams = []) {
 		parent::__construct(self::APP_ID, $urlParams);
-		$container = $this->getContainer();
-
-		$this->registerServices($container);
-		$this->registerControllers($container);
 	}
 
 	public function register(IRegistrationContext $context): void {
+		$this->registerServices($context);
+		$this->registerControllers($context);
+
 		// Sharing sidebar integration
 		$context->registerEventListener(BeforeTemplateRenderedEvent::class, BeforeTemplateRenderedListener::class);
 
@@ -70,48 +69,48 @@ class Application extends App implements IBootstrap {
 	/**
 	 * Register shared services used by the app.
 	 */
-	protected function registerServices(IContainer $c) {
-		$c->registerService(ShareRawOnlyMiddleware::class, function ($container) {
+	protected function registerServices(IRegistrationContext $context) {
+		$context->registerService(ShareRawOnlyMiddleware::class, function (ContainerInterface $container) {
 			/** @var IRequest $request */
-			$request = $container->query('Request');
+			$request = $container->get(IRequest::class);
 			/** @var RawShareMapper $mapper */
-			$mapper = $container->query('RawShareMapper');
+			$mapper = $container->get('RawShareMapper');
 			/** @var IConfig $config */
-			$config = $container->query('OCP\IConfig');
+			$config = $container->get('OCP\IConfig');
 			return new ShareRawOnlyMiddleware($request, $mapper, $config);
 		});
 
-		$c->registerService('RawShareMapper', function ($container) {
+		$context->registerService('RawShareMapper', function (ContainerInterface $container) {
 			/** @var \OCP\IDBConnection $db */
-			$db = $container->query('OCP\IDBConnection');
+			$db = $container->get('OCP\IDBConnection');
 			return new RawShareMapper($db);
 		});
 
-		$c->registerService('RawShareRegistry', function ($container) {
+		$context->registerService('RawShareRegistry', function (ContainerInterface $container) {
 			/** @var RawShareMapper $mapper */
-			$mapper = $container->query('RawShareMapper');
+			$mapper = $container->get('RawShareMapper');
 			/** @var \OCP\AppFramework\Utility\ITimeFactory $time */
-			$time = $container->query('OCP\AppFramework\Utility\ITimeFactory');
+			$time = $container->get('OCP\AppFramework\Utility\ITimeFactory');
 			return new RawShareRegistry($mapper, $time);
 		});
 
-		$c->registerService('CspManager', function ($container) {
+		$context->registerService('CspManager', function (ContainerInterface $container) {
 			/** @var IConfig $config */
-			$config = $container->query('OCP\IConfig');
+			$config = $container->get('OCP\IConfig');
 			/** @var IManager $shareManager */
-			$shareManager = $container->query('OCP\Share\IManager');
+			$shareManager = $container->get('OCP\Share\IManager');
 			/** @var RawShareRegistry $registry */
-			$registry = $container->query('RawShareRegistry');
+			$registry = $container->get('RawShareRegistry');
 			return new CspManager($config, $shareManager, $registry);
 		});
 
-		$c->registerService('PublicUrlBuilder', function ($container) {
+		$context->registerService('PublicUrlBuilder', function (ContainerInterface $container) {
 			/** @var IConfig $config */
-			$config = $container->query('OCP\IConfig');
+			$config = $container->get('OCP\IConfig');
 			/** @var IURLGenerator $url */
-			$url = $container->query('OCP\IURLGenerator');
+			$url = $container->get('OCP\IURLGenerator');
 			/** @var LoggerInterface $logger */
-			$logger = $container->query(LoggerInterface::class);
+			$logger = $container->get(LoggerInterface::class);
 			return new PublicUrlBuilder($config, $url, $logger);
 		});
 	}
@@ -119,63 +118,63 @@ class Application extends App implements IBootstrap {
 	/**
 	 * Register controller factories that inject dependencies.
 	 */
-	protected function registerControllers(IContainer $c) {
-		$c->registerService('PubPageController', function ($container) {
+	protected function registerControllers(IRegistrationContext $context) {
+		$context->registerService('PubPageController', function (ContainerInterface $container) {
 			$appName = self::APP_ID;
 			/** @var IRequest $request */
-			$request = $container->query('Request');
+			$request = $container->get(IRequest::class);
 			/** @var IManager $shareManager */
-			$shareManager = $container->query('OCP\Share\IManager');
+			$shareManager = $container->get('OCP\Share\IManager');
 			/** @var IConfig $config */
-			$config = $container->query('OCP\IConfig');
+			$config = $container->get('OCP\IConfig');
 			/** @var CspManager $cspManager */
-			$cspManager = $container->query('CspManager');
+			$cspManager = $container->get('CspManager');
 			/** @var PublicUrlBuilder $publicUrlBuilder */
-			$publicUrlBuilder = $container->query('PublicUrlBuilder');
+			$publicUrlBuilder = $container->get('PublicUrlBuilder');
 			/** @var RawShareRegistry $registry */
-			$registry = $container->query('RawShareRegistry');
+			$registry = $container->get('RawShareRegistry');
 
 			return new PubPageController($appName, $request, $shareManager, $config, $cspManager, $publicUrlBuilder, $registry);
 		});
 
-		$c->registerService('PrivatePageController', function ($container) {
+		$context->registerService('PrivatePageController', function (ContainerInterface $container) {
 			$appName = self::APP_ID;
 			/** @var IRequest $request */
-			$request = $container->query('Request');
+			$request = $container->get(IRequest::class);
 			/** @var IRootFolder $rootFolder */
-			$rootFolder = $container->query('OCP\Files\IRootFolder');
+			$rootFolder = $container->get('OCP\Files\IRootFolder');
 			/** @var CspManager $cspManager */
-			$cspManager = $container->query('CspManager');
+			$cspManager = $container->get('CspManager');
 			/** @var IConfig $config */
-			$config = $container->query('OCP\IConfig');
+			$config = $container->get('OCP\IConfig');
 			/** @var IUserSession $userSession */
-			$userSession = $container->query('OCP\IUserSession');
+			$userSession = $container->get('OCP\IUserSession');
 			/** @var PublicUrlBuilder $publicUrlBuilder */
-			$publicUrlBuilder = $container->query('PublicUrlBuilder');
+			$publicUrlBuilder = $container->get('PublicUrlBuilder');
 			/** @var IURLGenerator $url */
-			$url = $container->query('OCP\IURLGenerator');
+			$url = $container->get('OCP\IURLGenerator');
 
 			return new PrivatePageController($appName, $request, $rootFolder, $cspManager, $config, $userSession, $publicUrlBuilder, $url);
 		});
 
-		$c->registerService('RawShareApiController', function ($container) {
+		$context->registerService('RawShareApiController', function (ContainerInterface $container) {
 			$appName = self::APP_ID;
 			/** @var IRequest $request */
-			$request = $container->query('Request');
+			$request = $container->get(IRequest::class);
 			/** @var IManager $shareManager */
-			$shareManager = $container->query('OCP\Share\IManager');
+			$shareManager = $container->get('OCP\Share\IManager');
 			/** @var IUserSession $userSession */
-			$userSession = $container->query('OCP\IUserSession');
+			$userSession = $container->get('OCP\IUserSession');
 			/** @var RawShareRegistry $registry */
-			$registry = $container->query('RawShareRegistry');
+			$registry = $container->get('RawShareRegistry');
 			/** @var PublicUrlBuilder $publicUrlBuilder */
-			$publicUrlBuilder = $container->query('PublicUrlBuilder');
+			$publicUrlBuilder = $container->get('PublicUrlBuilder');
 			/** @var IRootFolder $rootFolder */
-			$rootFolder = $container->query('OCP\Files\IRootFolder');
+			$rootFolder = $container->get('OCP\Files\IRootFolder');
 			/** @var IConfig $config */
-			$config = $container->query('OCP\IConfig');
+			$config = $container->get('OCP\IConfig');
 			/** @var IGroupManager $groupManager */
-			$groupManager = $container->query('OCP\IGroupManager');
+			$groupManager = $container->get('OCP\IGroupManager');
 
 			return new RawShareApiController($appName, $request, $shareManager, $userSession, $registry, $publicUrlBuilder, $rootFolder, $config, $groupManager);
 		});
