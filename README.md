@@ -342,7 +342,7 @@ When deciding which CSP to send, the app evaluates selectors in this order:
 ### Per-share CSP (Files sidebar)
 
 > [!NOTE]
-> **Edit CSP** is restricted to the `admin` group by default. To delegate this to a custom group, create the group, add the permitted users, then point the app to it:
+> **Edit CSP** is restricted to the `admin` group by default. To delegate this to a custom group, create the group, add the permitted users, then select it under **Administration settings → Sharing → Raw Fileserver**, or point the app to it with occ:
 > ```bash
 > occ group:add raw_csp_allowed
 > occ group:adduser raw_csp_allowed <uid>
