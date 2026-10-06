@@ -10,7 +10,7 @@
 	errorLevel="4"
 	findUnusedBaselineEntry="false"
 	findUnusedCode="false"
-	phpVersion="8.1"
+	phpVersion="8.2"
 	resolveFromConfigFile="true"
 >
 	<stubs>
@@ -28,7 +28,7 @@
 		<directory name="vendor-bin/nextcloud-ocp" />
 	</extraFiles>
 	<issueHandlers>
-		<!-- the Override attribute exists since PHP 8.3; this app supports PHP >= 8.1 -->
+		<!-- the Override attribute exists since PHP 8.3; this app supports PHP >= 8.2 -->
 		<MissingOverrideAttribute errorLevel="suppress"/>
 	</issueHandlers>
 </psalm>
