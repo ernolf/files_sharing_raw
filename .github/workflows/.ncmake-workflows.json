@@ -49,6 +49,11 @@
     "sha": "a7f1e42674f3843c36edf696679083f9b1e9ad94",
     "source": "nextcloud"
   },
+  "phpunit-mariadb.yml": {
+    "hash": "e58e4e70bbaaba1820c7204e67f2c10af2dca07065490c67d77bc7bcf22afcd0",
+    "sha": "55139b44f33eb4e3f9f5807336507f3282de5f83",
+    "source": "nextcloud"
+  },
   "phpunit-mysql.yml": {
     "hash": "48f103bd51a077b1e1095399e582ed68a374bc0e6f7fe38569b6860419432929",
     "sha": "a7d98c9cfe23c84edb8f52d546c11e06cffed97a",
