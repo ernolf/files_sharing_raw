@@ -7,6 +7,7 @@
 
 namespace OCA\FilesSharingRaw\Controller;
 
+use OCA\FilesSharingRaw\AppInfo\Application;
 use OCA\FilesSharingRaw\Service\PublicUrlBuilder;
 use OCA\FilesSharingRaw\Service\RawShareRegistry;
 use OCP\AppFramework\Controller;
@@ -53,7 +54,7 @@ class RawShareApiController extends Controller {
 	/**
 	 * Check whether the current user is allowed to edit the per-share CSP.
 	 * The allowed group is stored in appconfig key 'csp_editor_group' and
-	 * defaults to 'admin'. Change via:
+	 * defaults to 'admin'. Change it in the admin settings (Sharing) or via:
 	 *   occ config:app:set files_sharing_raw csp_editor_group --value="raw_csp_allowed"
 	 */
 	private function canCurrentUserEditCsp(): bool {
@@ -61,7 +62,7 @@ class RawShareApiController extends Controller {
 		if ($user === null) {
 			return false;
 		}
-		$group = $this->config->getAppValue('files_sharing_raw', 'csp_editor_group', 'admin');
+		$group = $this->config->getAppValue(Application::APP_ID, Application::CONFIG_CSP_EDITOR_GROUP, Application::CSP_EDITOR_GROUP_DEFAULT);
 		return $this->groupManager->isInGroup($user->getUID(), $group);
 	}
 

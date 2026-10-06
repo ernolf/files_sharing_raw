@@ -9,6 +9,7 @@ import { createAppConfig } from '@nextcloud/vite-config'
 
 export default createAppConfig(
 	{
+		'admin-settings': resolve(join('src', 'admin-settings.js')),
 		'sharing-sidebar': resolve(join('src', 'sharing-sidebar.js')),
 	}, {
 		createEmptyCSSEntryPoints: true,
