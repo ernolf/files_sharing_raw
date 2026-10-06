@@ -39,7 +39,6 @@ class PublicUrlController extends Controller {
 		return new DataResponse([
 			'ok' => true,
 			'url' => $url,
-			'hasRoot' => $this->builder->hasRootAliases(),
 		]);
 	}
 }

@@ -17,7 +17,6 @@ use OCA\FilesSharingRaw\Middleware\ShareRawOnlyMiddleware;
 use OCA\FilesSharingRaw\Service\CspManager;
 use OCA\FilesSharingRaw\Service\PublicUrlBuilder;
 use OCA\FilesSharingRaw\Service\RawShareRegistry;
-use OCA\FilesSharingRaw\SetupCheck\RootRouteSupportCheck;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -32,7 +31,6 @@ use OCP\IUserSession;
 use OCP\Share\Events\ShareDeletedEvent;
 use OCP\Share\IManager;
 use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 
 class Application extends App implements IBootstrap {
 	public const APP_ID = 'files_sharing_raw';
@@ -62,9 +60,6 @@ class Application extends App implements IBootstrap {
 
 		// Global middleware: block /s/{token} when raw_only is set
 		$context->registerMiddleware(ShareRawOnlyMiddleware::class, true);
-
-		// Setup check: warn when the core does not grant the app its root routes
-		$context->registerSetupCheck(RootRouteSupportCheck::class);
 	}
 
 	public function boot(IBootContext $context): void {
@@ -109,13 +104,9 @@ class Application extends App implements IBootstrap {
 		});
 
 		$context->registerService('PublicUrlBuilder', function (ContainerInterface $container) {
-			/** @var IConfig $config */
-			$config = $container->get('OCP\IConfig');
 			/** @var IURLGenerator $url */
 			$url = $container->get('OCP\IURLGenerator');
-			/** @var LoggerInterface $logger */
-			$logger = $container->get(LoggerInterface::class);
-			return new PublicUrlBuilder($config, $url, $logger);
+			return new PublicUrlBuilder($url);
 		});
 	}
 
@@ -153,12 +144,10 @@ class Application extends App implements IBootstrap {
 			$config = $container->get('OCP\IConfig');
 			/** @var IUserSession $userSession */
 			$userSession = $container->get('OCP\IUserSession');
-			/** @var PublicUrlBuilder $publicUrlBuilder */
-			$publicUrlBuilder = $container->get('PublicUrlBuilder');
 			/** @var IURLGenerator $url */
 			$url = $container->get('OCP\IURLGenerator');
 
-			return new PrivatePageController($appName, $request, $rootFolder, $cspManager, $config, $userSession, $publicUrlBuilder, $url);
+			return new PrivatePageController($appName, $request, $rootFolder, $cspManager, $config, $userSession, $url);
 		});
 
 		$context->registerService('RawShareApiController', function (ContainerInterface $container) {

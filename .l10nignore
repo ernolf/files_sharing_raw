@@ -3,5 +3,3 @@
 js/
 vendor/
 tests/
-# Transitional setup check, only relevant below Nextcloud 32.0.7/33.0.1 - not worth translating
-lib/SetupCheck/RootRouteSupportCheck.php

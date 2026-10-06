@@ -22,8 +22,7 @@ return [
 		['name' => 'adminSettings#setCspEditorGroup', 'url' => '/api/v1/admin/csp-editor-group', 'verb' => 'POST'],
 
 		// Root alias routes: /raw/{token} and /raw/{token}/{path}.
-		// The core grants 'files_sharing_raw' these root routes since Nextcloud 32.0.7 and 33.0.1.
-		// Requests via fallback URLs below are 307-redirected to these when root aliases are active.
+		// Requests via the legacy URLs below are 307-redirected to these.
 		['name' => 'privatePage#getByPath', 'url' => '/u/{userId}/{path}', 'root' => '/raw',
 			'requirements' => [
 				'userId' => '[^/]+',
@@ -49,10 +48,8 @@ return [
 			]
 		],
 
-		// Legacy routes — always registered at /apps/files_sharing_raw/... (no root parameter).
-		// With root aliases active: these serve as redirect shims (307 → /raw/... or /rss/...).
-		// Without root aliases: the root-alias routes above are registered here automatically,
-		//   so these legacy entries are shadowed and behave identically — harmless duplication.
+		// Legacy routes at /apps/files_sharing_raw/... (no root parameter): redirect shims
+		// (307 → /raw/... or /rss/...) that keep links in the long form working.
 		['name' => 'pubPage#legacyByToken', 'url' => '/{token}', 'verb' => 'GET',
 			'requirements' => ['token' => '[A-Za-z0-9-]+']
 		],

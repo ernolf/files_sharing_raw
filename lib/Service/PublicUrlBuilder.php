@@ -7,47 +7,14 @@
 
 namespace OCA\FilesSharingRaw\Service;
 
-use OCP\IConfig;
 use OCP\IURLGenerator;
-use Psr\Log\LoggerInterface;
 
 class PublicUrlBuilder {
-	/** @var IConfig */
-	private $config;
 	/** @var IURLGenerator */
 	private $url;
-	/** @var LoggerInterface */
-	private $logger;
-	/** @var bool|null cached result of hasRootAliases() probe */
-	private ?bool $rootAliasesCache = null;
 
-	public function __construct(IConfig $config, IURLGenerator $url, LoggerInterface $logger) {
-		$this->config = $config;
+	public function __construct(IURLGenerator $url) {
 		$this->url = $url;
-		$this->logger = $logger;
-	}
-
-	public function hasRootAliases(): bool {
-		if ($this->rootAliasesCache !== null) {
-			return $this->rootAliasesCache;
-		}
-		// Detect whether root aliases are active by probing route generation.
-		// If RouteParser.php lists files_sharing_raw in its rootUrlApps constant,
-		// linkToRoute returns a /raw/... URL; otherwise it falls back to /apps/files_sharing_raw/...
-		try {
-			$url = $this->url->linkToRoute(
-				'files_sharing_raw.pubPage.getByTokenRoot',
-				['token' => 'probe']
-			);
-			$this->rootAliasesCache = \str_contains($url, '/raw/probe');
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'[files_sharing_raw] hasRootAliases probe failed: {error}',
-				['error' => $e->getMessage()]
-			);
-			$this->rootAliasesCache = false;
-		}
-		return $this->rootAliasesCache;
 	}
 
 	/**
@@ -65,12 +32,6 @@ class PublicUrlBuilder {
 	}
 
 	public function publicTokenUrl(string $token, string $path = ''): string {
-		// When the core lists files_sharing_raw in rootUrlApps (since Nextcloud 32.0.7 and
-		// 33.0.1), the route is registered at /raw/{token}. On older cores it falls back to
-		// /apps/files_sharing_raw/{token}. In both cases linkToRouteAbsolute returns the
-		// correct absolute URL — no guard needed here.
-		// Once root aliases are active, redirectCanonicalIfNeeded() issues a 307 for any
-		// request still arriving via the long /apps/files_sharing_raw/... path.
 		if ($path === '') {
 			return $this->url->linkToRouteAbsolute('files_sharing_raw.pubPage.getByTokenRoot', ['token' => $token]);
 		}
@@ -79,13 +40,9 @@ class PublicUrlBuilder {
 	}
 
 	public function rssUrl(string $path = ''): string {
-		if ($this->hasRootAliases()) {
-			if ($path === '') {
-				return $this->url->linkToRoute('files_sharing_raw.pubPage.getRssRoot');
-			}
-			return $this->url->linkToRoute('files_sharing_raw.pubPage.getRssRootPath', ['path' => $path]);
+		if ($path === '') {
+			return $this->url->linkToRoute('files_sharing_raw.pubPage.getRssRoot');
 		}
-		// Fallback: /apps/raw/rss[/...]
-		return $this->publicTokenUrl('rss', $path);
+		return $this->url->linkToRoute('files_sharing_raw.pubPage.getRssRootPath', ['path' => $path]);
 	}
 }
