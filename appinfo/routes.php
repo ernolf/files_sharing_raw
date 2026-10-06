@@ -9,7 +9,7 @@
 return [
 	'routes' => [
 		// API routes — always reachable under /apps/files_sharing_raw/api/v1/...
-		['name' => 'rawPublicUrl#getTokenUrl', 'url' => '/api/v1/raw-public-url', 'verb' => 'GET'],
+		['name' => 'publicUrl#getTokenUrl', 'url' => '/api/v1/raw-public-url', 'verb' => 'GET'],
 
 		// Raw share registry API (used by Files sidebar UI)
 		['name' => 'rawShareApi#get', 'url' => '/api/v1/raw-share/{shareId}', 'verb' => 'GET'],
