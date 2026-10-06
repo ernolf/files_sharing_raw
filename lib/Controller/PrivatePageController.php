@@ -89,9 +89,6 @@ class PrivatePageController extends Controller {
 		}
 
 		$userFolder = $this->rootFolder->getUserFolder($userId);
-		if (!$userFolder) {
-			return new NotFoundResponse();
-		}
 
 		try {
 			$node = $userFolder->get($path);
