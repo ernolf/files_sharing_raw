@@ -68,10 +68,6 @@ class PubPageController extends Controller {
 	}
 
 	private function redirectCanonicalIfNeeded(string $token, ?string $path): void {
-		if (!$this->publicUrlBuilder->hasRootAliases()) {
-			return;
-		}
-
 		$method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
 		if ($method !== 'GET' && $method !== 'HEAD') {
 			return;
@@ -82,17 +78,11 @@ class PubPageController extends Controller {
 		if ($reqPath === null || $reqPath === false) {
 			$reqPath = $uri;
 		}
-		$isFromApps = strpos($reqPath, '/apps/files_sharing_raw') === 0;
-		$isRssViaRaw = $token === 'rss' && str_contains($reqPath, '/raw/rss');
-		if (!$isFromApps && !$isRssViaRaw) {
+		if ($token !== 'rss' || !str_contains($reqPath, '/raw/rss')) {
 			return;
 		}
 
-		if ($token === 'rss') {
-			$target = $this->publicUrlBuilder->rssPath($path ?? '');
-		} else {
-			$target = $this->publicUrlBuilder->rawPath($token, $path ?? '');
-		}
+		$target = $this->publicUrlBuilder->rssPath($path ?? '');
 		$qs = parse_url($uri, PHP_URL_QUERY);
 		if (is_string($qs) && $qs !== '') {
 			$target .= '?' . $qs;
@@ -217,66 +207,50 @@ class PubPageController extends Controller {
 		return $this->getByTokenAndPathRoot('rss', (string)$path);
 	}
 
-	// Legacy routes: /apps/files_sharing_raw/... — always registered regardless of root alias support.
-	// When root aliases are active: issue a 307 redirect to the canonical /raw/... URL.
-	// When root aliases are inactive: delegate directly to the corresponding canonical method.
+	// Legacy routes: /apps/files_sharing_raw/... are kept so that links in that form keep
+	// working; they 307-redirect to the canonical /raw/... or /rss URL.
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	#[PublicPage]
 	public function legacyByToken($token) {
-		if ($this->publicUrlBuilder->hasRootAliases()) {
-			$target = $this->publicUrlBuilder->rawPath((string)$token);
-			$qs = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY);
-			if (is_string($qs) && $qs !== '') {
-				$target .= '?' . $qs;
-			}
-			header('Location: ' . $target, true, 307);
-			exit;
+		$target = $this->publicUrlBuilder->rawPath((string)$token);
+		$qs = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY);
+		if (is_string($qs) && $qs !== '') {
+			$target .= '?' . $qs;
 		}
-		return $this->getByToken($token);
+		header('Location: ' . $target, true, 307);
+		exit;
 	}
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	#[PublicPage]
 	public function legacyByTokenAndPath($token, $path) {
-		if ($this->publicUrlBuilder->hasRootAliases()) {
-			$target = $this->publicUrlBuilder->rawPath((string)$token, (string)$path);
-			$qs = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY);
-			if (is_string($qs) && $qs !== '') {
-				$target .= '?' . $qs;
-			}
-			header('Location: ' . $target, true, 307);
-			exit;
+		$target = $this->publicUrlBuilder->rawPath((string)$token, (string)$path);
+		$qs = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY);
+		if (is_string($qs) && $qs !== '') {
+			$target .= '?' . $qs;
 		}
-		return $this->getByTokenAndPath($token, $path);
+		header('Location: ' . $target, true, 307);
+		exit;
 	}
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	#[PublicPage]
 	public function legacyRss() {
-		if ($this->publicUrlBuilder->hasRootAliases()) {
-			$target = $this->publicUrlBuilder->rssPath('');
-			header('Location: ' . $target, true, 307);
-			exit;
-		}
-		return $this->getByTokenRoot('rss');
+		$target = $this->publicUrlBuilder->rssPath('');
+		header('Location: ' . $target, true, 307);
+		exit;
 	}
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	#[PublicPage]
 	public function legacyRssPath($path = '') {
-		if ($this->publicUrlBuilder->hasRootAliases()) {
-			$target = $this->publicUrlBuilder->rssPath((string)$path);
-			header('Location: ' . $target, true, 307);
-			exit;
-		}
-		if ($path === '' || $path === null) {
-			return $this->getByTokenRoot('rss');
-		}
-		return $this->getByTokenAndPath('rss', (string)$path);
+		$target = $this->publicUrlBuilder->rssPath((string)$path);
+		header('Location: ' . $target, true, 307);
+		exit;
 	}
 }

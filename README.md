@@ -27,7 +27,7 @@
 
 > [!NOTE]
 > **`files_sharing_raw`** is the actively maintained successor to [`ernolf/raw`](https://github.com/ernolf/raw), which stopped working with Nextcloud 32 due to breaking API changes (`OCP\Share` was removed). `files_sharing_raw` was rebuilt from the ground up to be compatible with Nextcloud 32 and later, while adding a proper database registry, a Files sidebar UI, per-share CSP overrides, webserver offload support, and more.  
-> The longer app ID was chosen deliberately: from the outset, a [pull request to Nextcloud core](https://github.com/nextcloud/server/pull/58648) was planned to register `files_sharing_raw` in the `rootUrlApps` list — which is what enables the short, clean `/raw/{token}` URLs. That PR has been merged and the change ships with **Nextcloud 32.0.7+ and 33.0.1+**. On older patch releases the app automatically falls back to the longer `/apps/files_sharing_raw/{token}` URLs.
+> The longer app ID was chosen deliberately: from the outset, a [pull request to Nextcloud core](https://github.com/nextcloud/server/pull/58648) was planned to register `files_sharing_raw` in the `rootUrlApps` list — which is what enables the short, clean `/raw/{token}` URLs. That PR has been merged and the change ships with **Nextcloud 32.0.7+ and 33.0.1+**.
 
 ---
 
@@ -40,7 +40,7 @@
   * [Public shares](#public-shares)
   * [Private user files](#private-user-files)
   * [Root aliases (`/raw` and `/rss`)](#root-aliases-raw-and-rss)
-  * [Fallback URLs (without `rootUrlApps`)](#fallback-urls-without-rooturlapps)
+  * [Legacy URLs](#legacy-urls)
 
 * [Enabling raw access](#enabling-raw-access)
 
@@ -111,9 +111,6 @@
 5. (Optional) Alternatively or additionally, allowlist tokens in [`config/{raw.}config.php`](#via-config-allowed_raw_tokens-and-wildcards) — useful for automation or custom link names.
 6. (Optional) Configure CSP policies via `raw_csp`.
 
-> [!NOTE]
-> The short `/raw/{token}` URLs are available since **Nextcloud 32.0.7 / 33.0.1**. On older cores the app automatically falls back to longer `/apps/files_sharing_raw/{token}` URLs.
-
 ---
 
 ## URL forms
@@ -153,7 +150,7 @@ The `/u/` prefix is **required** and cannot be omitted.
 
 ### Root aliases (`/raw` and `/rss`)
 
-Since **Nextcloud 32.0.7 / 33.0.1** the core grants the app its root aliases and the short URLs are active:
+The core grants the app its root aliases (`rootUrlApps`), so the short URLs are the canonical ones:
 
 | Purpose | URL |
 |---|---|
@@ -165,17 +162,16 @@ Since **Nextcloud 32.0.7 / 33.0.1** the core grants the app its root aliases and
 > [!NOTE]
 > `/rss` and `/rss/{path}` are convenience shortcuts that internally behave exactly like `/raw/rss` and `/raw/rss/{path}`. The underlying share token is `rss` — it must be enabled like any other token (UI toggle or config allowlist).
 
-### Fallback URLs (without `rootUrlApps`)
+### Legacy URLs
 
-On cores without the root alias grant (below Nextcloud 32.0.7 / 33.0.1), the app falls back to longer URLs:
+Links in the longer form keep working and are **307-redirected** to the canonical URL:
 
 | Purpose | URL |
 |---|---|
 | Public share | `/apps/files_sharing_raw/{token}` |
 | Public share + path | `/apps/files_sharing_raw/{token}/{path}` |
 | Private file | `/apps/files_sharing_raw/u/{userId}/{path}` |
-
-The sidebar UI automatically shows the correct URL depending on whether root aliases are active. When root aliases are active, requests to fallback URLs are automatically **307-redirected** to the canonical `/raw/...` form.
+| RSS alias | `/apps/files_sharing_raw/rss` or `/apps/files_sharing_raw/rss/{path}` |
 
 ---
 
