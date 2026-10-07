@@ -34,6 +34,11 @@
     "sha": "e4b26b58587886ee60299124591b46be8e28323e",
     "source": "nextcloud"
   },
+  "lint-vue-imports.yml": {
+    "hash": "cb61a296717fe0ce517914bdcf5cf04079e94d5d4a068d0011572bb3025d7fc0",
+    "sha": "1d0db38e9670e34e9301f5ed32defbd58675d7d3",
+    "source": "ncmake"
+  },
   "node-test.yml": {
     "hash": "6d88f83be3cba8e6373a3d07411c0b6a80b0554056975dce719e8c9f817e1943",
     "sha": "1b74d3e4eda159598431c71d90a3cd2dcede5062",

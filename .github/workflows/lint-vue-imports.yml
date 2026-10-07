@@ -1,0 +1,105 @@
+# SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz <raphael.gradenwitz@googlemail.com>
+# SPDX-License-Identifier: MIT
+#
+# Generic import linter: no source file imports the @nextcloud/vue root.
+# https://github.com/ernolf/ncmake
+#
+# `import { NcButton } from '@nextcloud/vue'` puts every module of the library
+# into the module graph before tree shaking runs. The per-component entry point
+# `@nextcloud/vue/components/NcButton` keeps the graph to what is used. The rule
+# is not in nextcloud-libraries/eslint-config and the server imports from the
+# root throughout, so every app that follows the server as its example inherits
+# the weight. ncmake ships the gate itself.
+#
+# grep, not `eslint --rule no-restricted-imports`: the check is a single literal
+# specifier, and grep needs neither `npm ci` nor an ESLint setup in the
+# repository. An app that wants the rule in its editor as well can still add
+# no-restricted-imports to its own eslint.config.mjs.
+#
+# A repository without a hit passes instead of failing, so the workflow can be
+# installed anywhere without becoming a permanent red cross.
+
+name: Lint Vue imports
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lint-vue-imports-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  root-imports:
+    name: "@nextcloud/vue root imports"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Collect source files
+        id: collect
+        run: |
+          list="$RUNNER_TEMP/vue-source-files"
+          : > "$list"
+          # Tracked files only: a checkout carries nothing else worth checking,
+          # and git handles names with spaces through the NUL separator.
+          while IFS= read -r -d '' f; do
+            test -f "$f" || continue
+            # A tracked dependency tree is not this repository's source, and the
+            # library's own files would report the barrel it defines.
+            case "$f" in
+              node_modules/* | */node_modules/* | vendor/* | */vendor/*)
+                continue
+                ;;
+            esac
+            case "$f" in
+              *.vue | *.js | *.mjs | *.cjs | *.jsx | *.ts | *.mts | *.cts | *.tsx)
+                printf '%s\n' "$f" >> "$list"
+                ;;
+            esac
+          done < <(git ls-files -z)
+          count="$(wc -l < "$list")"
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+          echo "Source files to check: $count"
+
+      - name: Check for root imports
+        if: steps.collect.outputs.count != '0'
+        run: |
+          # The specifier has to end right after `vue`, so an entry-point path
+          # such as @nextcloud/vue/components/NcButton passes. Four forms reach
+          # the barrel: a static import or re-export, a side-effect or dynamic
+          # import, a CommonJS require, and a test double, where both vi.mock
+          # and jest.mock end in `mock(`.
+          pattern="(from|import|mock\(|require\()[[:space:]]*\(?[[:space:]]*['\"]@nextcloud/vue['\"]"
+          # A commented-out import is not an import. Only a line that opens with
+          # a comment marker is dropped, so no real import can be hidden this
+          # way; the prefix is grep's own `path:line:`, and a path containing a
+          # colon merely keeps such a line in the report.
+          comment="^[^:]*:[0-9]+:[[:space:]]*(//|/\*|\*)"
+          hits="$RUNNER_TEMP/vue-root-imports"
+          # -d '\n' keeps names with spaces intact; both greps exit 1 on a batch
+          # without a match, which is not an error here.
+          xargs -r -d '\n' -a "$RUNNER_TEMP/vue-source-files" grep -nHE "$pattern" | grep -vE "$comment" > "$hits" || true
+          if ! test -s "$hits"; then
+            echo "No file imports the @nextcloud/vue root."
+            exit 0
+          fi
+          cat "$hits"
+          echo
+          echo "Lines with the root specifier: $(wc -l < "$hits")"
+          echo "Files affected: $(cut -d: -f1 "$hits" | sort -u | wc -l)"
+          echo
+          echo "Import the component entry point instead, for example:"
+          echo "  import NcButton from '@nextcloud/vue/components/NcButton'"
+          exit 1
+
+      - name: Nothing to check
+        if: steps.collect.outputs.count == '0'
+        run: echo "No Vue, JavaScript or TypeScript file in this repository; nothing to check."
