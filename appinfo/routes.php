@@ -18,6 +18,9 @@ return [
 			'requirements' => ['fileId' => '\d+']
 		],
 
+		// Admin settings (Sharing section)
+		['name' => 'adminSettings#setCspEditorGroup', 'url' => '/api/v1/admin/csp-editor-group', 'verb' => 'POST'],
+
 		// Root alias routes: /raw/{token} and /raw/{token}/{path}.
 		// The core grants 'files_sharing_raw' these root routes since Nextcloud 32.0.7 and 33.0.1.
 		// Requests via fallback URLs below are 307-redirected to these when root aliases are active.

@@ -37,6 +37,10 @@ use Psr\Log\LoggerInterface;
 class Application extends App implements IBootstrap {
 	public const APP_ID = 'files_sharing_raw';
 
+	/** Appconfig key of the group whose members may edit the per-share CSP. */
+	public const CONFIG_CSP_EDITOR_GROUP = 'csp_editor_group';
+	public const CSP_EDITOR_GROUP_DEFAULT = 'admin';
+
 	/**
 	 * Application constructor
 	 *
