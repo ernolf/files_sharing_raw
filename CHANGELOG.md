@@ -9,6 +9,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.4] - 2026-10-07
+
+### Added
+
+- Choose the CSP editor group in the admin settings (#89) (#105)
+
+### Changed
+
+- The 0.7 line supports Nextcloud 32 and 33; Nextcloud 34 and later are served by 0.8 (#107)
+
+### Fixed
+
+- Show toasts in the top right corner like the server's own toasts on Nextcloud 32 and 33 (#104)
+- Point the raw-public-url route at PublicUrlController (#97) (#106)
+
+[0.7.4]: https://github.com/ernolf/files_sharing_raw/releases/tag/v0.7.4
+
 ## [0.7.3] - 2026-09-19
 
 ### Fixed
