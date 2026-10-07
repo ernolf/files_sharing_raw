@@ -30,5 +30,11 @@
 	<issueHandlers>
 		<!-- the Override attribute exists since PHP 8.3; this app supports PHP >= 8.1 -->
 		<MissingOverrideAttribute errorLevel="suppress"/>
+		<!-- nextcloud/ocp documents ISchemaWrapper::createTable() with a Doctrine class it does not ship -->
+		<UndefinedDocblockClass>
+			<errorLevel type="suppress">
+				<referencedClass name="Doctrine\DBAL\Schema\Table" />
+			</errorLevel>
+		</UndefinedDocblockClass>
 	</issueHandlers>
 </psalm>
