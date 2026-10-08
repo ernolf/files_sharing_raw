@@ -40,7 +40,7 @@ A user can also access their own private files. For example, a file named `test.
 		<prevent_group_restriction />
 	</types>
 	<documentation>
-		<admin>https://github.com/ernolf/files_sharing_raw#readme</admin>
+		<admin>https://github.com/ernolf/files_sharing_raw/wiki</admin>
 	</documentation>
 	<category>files</category>
 	<website>https://github.com/ernolf/files_sharing_raw</website>
