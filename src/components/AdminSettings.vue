@@ -34,7 +34,7 @@ import NcSettingsSection from '@nextcloud/vue/components/NcSettingsSection'
 
 import '@nextcloud/dialogs/style.css'
 
-const docUrl = 'https://github.com/ernolf/files_sharing_raw#per-share-csp-files-sidebar'
+const docUrl = 'https://github.com/ernolf/files_sharing_raw/wiki/Content-Security-Policy#-csp-editors'
 
 const allGroups = loadState('files_sharing_raw', 'all_groups', [])
 const group = ref(loadState('files_sharing_raw', 'csp_editor_group', 'admin'))
