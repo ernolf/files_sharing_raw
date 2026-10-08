@@ -197,6 +197,8 @@ const CSP_PRESETS = [
 // --- state ---
 const enabled = ref(false)
 const rawOnly = ref(false)
+// enabled state as last read from or written to the backend, null while unknown
+const savedEnabled = ref(null)
 const loadedOnce = ref(false)
 const saveRegistrar = ref(null)
 
@@ -305,6 +307,7 @@ async function loadStateFromBackend() {
 	}
 
 	enabled.value = !!data.enabled
+	savedEnabled.value = enabled.value
 	rawOnly.value = !!data.rawOnly
 	canEditCsp.value = !!data.canEditCsp
 	// GET already returns rawUrl and csp — no second request needed
@@ -353,7 +356,9 @@ async function save() {
 	// POST also returns rawUrl — update directly from response
 	const data = await res.json().catch(() => null)
 	rawUrl.value = data?.rawUrl ?? (enabled.value ? rawUrl.value : '')
+	savedEnabled.value = enabled.value
 	loadedOnce.value = false
+	showSuccess(t('files_sharing_raw', 'Raw setting saved.'))
 	dbg('POST ok', { rawUrl: rawUrl.value })
 }
 
@@ -440,6 +445,10 @@ watch(
 		dbg('onSave registrar set', { shareId: shareId.value })
 		try {
 			fn(async () => {
+				// "Update share" saves every share setting; skip when the raw toggle is unchanged
+				if (enabled.value === savedEnabled.value) {
+					return
+				}
 				await save()
 			})
 		} catch {
@@ -456,6 +465,7 @@ onMounted(() => {
 
 watch(shareId, () => {
 	loadedOnce.value = false
+	savedEnabled.value = null
 	rawUrl.value = ''
 	rawOnly.value = false
 	loadStateFromBackend()
