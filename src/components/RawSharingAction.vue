@@ -150,6 +150,8 @@ import CheckIcon from 'vue-material-design-icons/CheckBold.vue'
 import CloseIcon from 'vue-material-design-icons/Close.vue'
 import Tune from 'vue-material-design-icons/Tune.vue'
 
+import '@nextcloud/dialogs/style.css'
+
 const props = defineProps({
 	// part of the sidebar-action element contract, currently unused in the template
 	// eslint-disable-next-line vue/no-unused-properties
