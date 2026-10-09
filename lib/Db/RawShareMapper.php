@@ -70,6 +70,24 @@ class RawShareMapper extends QBMapper {
 	}
 
 	/**
+	 * Returns true if the share identified by $token has a password.
+	 */
+	public function isPasswordProtectedByToken(string $token): bool {
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('id')
+			->from('share')
+			->where($qb->expr()->eq('token', $qb->createNamedParameter($token, IQueryBuilder::PARAM_STR)))
+			->andWhere($qb->expr()->isNotNull('password'))
+			->setMaxResults(1);
+
+		$result = $qb->executeQuery();
+		$row = $result->fetch();
+		$result->closeCursor();
+
+		return $row !== false;
+	}
+
+	/**
 	 * Upsert-like behavior:
 	 * - if exists: update enabled/csp/raw_only/updated_at
 	 * - else: insert new row

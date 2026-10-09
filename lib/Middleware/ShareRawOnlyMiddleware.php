@@ -43,6 +43,12 @@ class ShareRawOnlyMiddleware extends Middleware {
 
 		$token = $m[1];
 
+		// A password-protected share is never served raw, so raw-only would leave
+		// it unreachable.
+		if ($this->mapper->isPasswordProtectedByToken($token)) {
+			return;
+		}
+
 		if ($this->mapper->isRawOnlyByToken($token) || $this->isRawOnlyByConfig($token)) {
 			throw new NotFoundException('Raw-only share');
 		}
