@@ -180,6 +180,36 @@ class CspManagerTest extends TestCase {
 		self::assertSame("default-src 'self'", $this->manager->determineCspForRequest($this->fileNode('page.html', 'text/html')));
 	}
 
+	public function testRootAliasPathPrefixMatchesBothUrlForms(): void {
+		$this->withRawCsp([
+			'path_prefix' => ['/raw/aBc123/html/' => "default-src 'self'"],
+		]);
+
+		$_SERVER['REQUEST_URI'] = '/raw/aBc123/html/page.html';
+		self::assertSame("default-src 'self'", $this->manager->determineCspForRequest($this->fileNode('page.html', 'text/html')));
+
+		$_SERVER['REQUEST_URI'] = '/apps/files_sharing_raw/aBc123/html/page.html';
+		self::assertSame("default-src 'self'", $this->manager->determineCspForRequest($this->fileNode('page.html', 'text/html')));
+	}
+
+	public function testRootAliasPathPrefixIsNotMatchedAfterTheToken(): void {
+		$_SERVER['REQUEST_URI'] = '/raw/aBc123/raw/html/page.html';
+		$this->withRawCsp([
+			'path_prefix' => ['/raw/html/' => "default-src 'self'"],
+		]);
+
+		self::assertSame(CspManager::HARD_FALLBACK, $this->manager->determineCspForRequest($this->fileNode('page.html', 'text/html')));
+	}
+
+	public function testRssPathPrefixMatches(): void {
+		$_SERVER['REQUEST_URI'] = '/rss/feed.xml';
+		$this->withRawCsp([
+			'path_prefix' => ['/rss/' => "default-src 'self'"],
+		]);
+
+		self::assertSame("default-src 'self'", $this->manager->determineCspForRequest($this->fileNode('feed.xml', 'application/rss+xml')));
+	}
+
 	public function testRelativePathPrefixMatchesAfterTheToken(): void {
 		$_SERVER['REQUEST_URI'] = '/raw/aBc123/html/page.html';
 		$this->withRawCsp([

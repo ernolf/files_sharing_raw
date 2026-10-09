@@ -330,7 +330,7 @@ When deciding which CSP to send, the app evaluates selectors in this order:
 
 * `token` (config) — exact match for a public share token in `raw_csp['token']` (highest priority).
 * **Per-share CSP** — custom CSP stored via the UI or REST API (applies if the share is raw-enabled and a custom CSP is set; lower priority than config token, higher than path rules).
-* `path_prefix` — longest matching prefix. Supports absolute prefixes (starting with `/apps/files_sharing_raw`) and relative prefixes (matched against the path after the app prefix and token).
+* `path_prefix` — longest matching prefix. Supports absolute prefixes (starting with `/apps/files_sharing_raw`, or with the short forms `/raw` and `/rss` used in URLs) and relative prefixes (matched against the path after the app prefix and token).
 * `path_contains` — substring match. Checked against both the full request path and the path after the app prefix, so public and private URLs are covered.
 * `extension` — file extension match (e.g. `html`, `json`).
 * `mimetype` — MIME type match (e.g. `text/html`, `application/json`).
