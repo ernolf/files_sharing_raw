@@ -6,9 +6,15 @@
 <template>
 	<div class="rawAction">
 		<!-- Toggle in Advanced settings panel -->
-		<NcCheckboxRadioSwitch v-model="enabled">
+		<NcCheckboxRadioSwitch v-model="enabled" :disabled="passwordProtected">
 			{{ t('files_sharing_raw', 'Enable raw link') }}
 		</NcCheckboxRadioSwitch>
+		<p v-if="passwordProtected" class="rawAction__hint">
+			{{ t('files_sharing_raw', 'Password-protected shares cannot be served raw.') }}
+			<a :href="WEBDAV_PUBLIC_SHARES_DOC" target="_blank" rel="noopener noreferrer">
+				{{ t('files_sharing_raw', 'Access them over WebDAV instead.') }}
+			</a>
+		</p>
 
 		<!-- Raw link entry — visible only when raw is enabled and URL is known -->
 		<transition name="raw-link-fade">
@@ -160,6 +166,8 @@ const props = defineProps({
 	onSave: { type: Function, required: false, default: undefined },
 })
 
+const WEBDAV_PUBLIC_SHARES_DOC = 'https://docs.nextcloud.com/server/latest/user_manual/en/files/access_webdav.html#accessing-public-shares-over-webdav'
+
 // --- CSP presets (id, label, csp value; null csp = "Custom" sentinel) ---
 const CSP_PRESETS = [
 	{
@@ -197,6 +205,7 @@ const CSP_PRESETS = [
 // --- state ---
 const enabled = ref(false)
 const rawOnly = ref(false)
+const passwordProtected = ref(false)
 // enabled state as last read from or written to the backend, null while unknown
 const savedEnabled = ref(null)
 const loadedOnce = ref(false)
@@ -309,6 +318,7 @@ async function loadStateFromBackend() {
 	enabled.value = !!data.enabled
 	savedEnabled.value = enabled.value
 	rawOnly.value = !!data.rawOnly
+	passwordProtected.value = !!data.passwordProtected
 	canEditCsp.value = !!data.canEditCsp
 	// GET already returns rawUrl and csp — no second request needed
 	rawUrl.value = data.rawUrl ?? ''
@@ -349,6 +359,13 @@ async function save() {
 			contentType: ct,
 			body: txt.slice(0, 2000),
 		})
+		// the share got a password after the sidebar loaded its state
+		if (res.status === 400 && txt.includes('password_protected')) {
+			enabled.value = false
+			passwordProtected.value = true
+			showError(t('files_sharing_raw', 'Password-protected shares cannot be served raw.'))
+			return
+		}
 		showError(t('files_sharing_raw', 'Failed to save raw setting.') + ' (HTTP ' + res.status + ')')
 		return
 	}
@@ -468,6 +485,7 @@ watch(shareId, () => {
 	savedEnabled.value = null
 	rawUrl.value = ''
 	rawOnly.value = false
+	passwordProtected.value = false
 	loadStateFromBackend()
 })
 
@@ -505,6 +523,17 @@ watch(enabled, (val) => {
 .rawAction :deep(.checkbox-content__text) {
 	position: relative;
 	top: -4px;
+}
+
+/* --- Password-protected share hint --- */
+.rawAction__hint {
+	font-size: 0.8em;
+	color: var(--color-text-maxcontrast);
+	margin: 0;
+}
+
+.rawAction__hint a {
+	text-decoration: underline;
 }
 
 /* --- Raw link list (resets browser ul defaults) --- */
