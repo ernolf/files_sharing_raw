@@ -17,13 +17,19 @@ import { registerSidebarAction } from '@nextcloud/sharing/ui'
 const ELEMENT_NAME = 'oca_files_sharing_raw-sharing_action'
 
 describe('sharing-sidebar', () => {
+	// vitest 5 clears mocks before each test, so the registration from
+	// beforeAll has to be captured here
+	let registrations = 0
+	let action
+
 	beforeAll(async () => {
 		await import('./sharing-sidebar.js')
+		registrations = registerSidebarAction.mock.calls.length
+		action = registerSidebarAction.mock.calls[0]?.[0]
 	})
 
 	it('registers the sidebar action once', () => {
-		expect(registerSidebarAction).toHaveBeenCalledTimes(1)
-		const action = registerSidebarAction.mock.calls[0][0]
+		expect(registrations).toBe(1)
 		expect(action.id).toBe('files_sharing_raw')
 		expect(action.element).toBe(ELEMENT_NAME)
 	})
@@ -33,13 +39,14 @@ describe('sharing-sidebar', () => {
 	})
 
 	it('does not register twice when the bundle is loaded again', async () => {
+		registerSidebarAction.mockClear()
 		vi.resetModules()
 		await import('./sharing-sidebar.js')
-		expect(registerSidebarAction).toHaveBeenCalledTimes(1)
+		expect(registerSidebarAction).not.toHaveBeenCalled()
 	})
 
 	describe('enabled()', () => {
-		const enabled = (share) => registerSidebarAction.mock.calls[0][0].enabled(share)
+		const enabled = (share) => action.enabled(share)
 
 		it('is disabled without a token', () => {
 			expect(enabled(undefined)).toBe(false)
