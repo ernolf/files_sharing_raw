@@ -81,19 +81,7 @@ class CspManager {
 		// get the raw request path (no query)
 		$uri = $_SERVER['REQUEST_URI'] ?? '';
 		$uriPath = parse_url($uri, PHP_URL_PATH) ?: $uri;
-		$uriPath = urldecode($uriPath);
-
-		// Normalize all URL forms into a canonical "/apps/files_sharing_raw/..." shape
-		// so that the same matching rules work for /raw (root alias) and /rss.
-		if (strpos($uriPath, '/raw') === 0) {
-			$uriPath = '/apps/files_sharing_raw' . substr($uriPath, 4);
-		} elseif (strpos($uriPath, '/rss') === 0) {
-			$tail = substr($uriPath, 4);
-			if ($tail === '') {
-				$tail = '';
-			}
-			$uriPath = '/apps/files_sharing_raw/rss' . $tail;
-		}
+		$uriPath = $this->normalizeRawPath(urldecode($uriPath));
 
 		// Detect private URL form: /raw/u/{userId}/... or /apps/files_sharing_raw/u/{userId}/...
 		$isPrivate = false;
@@ -143,21 +131,24 @@ class CspManager {
 			$afterTokenPath = '/';
 		}
 
-		// 2) path-prefix matching: supports absolute prefixes (start with /apps/files_sharing_raw) and relative prefixes (match against $afterTokenPath)
+		// 2) path-prefix matching: supports absolute prefixes (start with /apps/files_sharing_raw, /raw or /rss) and relative prefixes (match against $afterTokenPath)
 		$bestPrefix = null;
 		$bestIsRelative = false;
+		$bestPolicy = null;
 		foreach ($prefixes as $prefix => $policy) {
 			$prefix = (string)$prefix;
 			if ($prefix === '') {
 				continue;
 			}
 
-			// absolute prefix: compare against full URI path
-			if (strpos($prefix, '/apps/files_sharing_raw') === 0) {
-				if (strpos($uriPath, $prefix) === 0) {
-					if ($bestPrefix === null || strlen($prefix) > strlen($bestPrefix)) {
-						$bestPrefix = $prefix;
+			// absolute prefix: normalized like the request path, compared against the full URI path
+			$absolute = $this->normalizeRawPath($prefix);
+			if (strpos($absolute, '/apps/files_sharing_raw') === 0) {
+				if (strpos($uriPath, $absolute) === 0) {
+					if ($bestPrefix === null || strlen($absolute) > strlen($bestPrefix)) {
+						$bestPrefix = $absolute;
 						$bestIsRelative = false;
+						$bestPolicy = $policy;
 					}
 				}
 				continue;
@@ -183,7 +174,7 @@ class CspManager {
 					}
 				}
 			} else {
-				return $this->buildCspFromPolicy($prefixes[$bestPrefix]);
+				return $this->buildCspFromPolicy($bestPolicy);
 			}
 		}
 
@@ -317,6 +308,24 @@ class CspManager {
 		}
 
 		return '';
+	}
+
+	/**
+	 * Map the /raw (root alias) and /rss URL forms onto the canonical
+	 * "/apps/files_sharing_raw/..." shape, so request paths and path_prefix
+	 * keys are compared in the same form.
+	 *
+	 * @param string $path
+	 * @return string
+	 */
+	private function normalizeRawPath(string $path): string {
+		if (strpos($path, '/raw') === 0) {
+			return '/apps/files_sharing_raw' . substr($path, 4);
+		}
+		if (strpos($path, '/rss') === 0) {
+			return '/apps/files_sharing_raw/rss' . substr($path, 4);
+		}
+		return $path;
 	}
 
 	/**
