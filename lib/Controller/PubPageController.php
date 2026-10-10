@@ -125,6 +125,11 @@ class PubPageController extends Controller {
 	}
 
 	private function isAllowedShare(\OCP\Share\IShare $share, string $token): bool {
+		// Raw delivery has no password prompt: a password-protected share is never
+		// served raw, not even for a token allowed by config.
+		if ($share->getPassword() !== null) {
+			return false;
+		}
 		// Config ALWAYS has top priority (tokens + wildcards).
 		if ($this->isAllowedByConfig($token)) {
 			return true;

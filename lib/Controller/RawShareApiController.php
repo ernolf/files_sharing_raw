@@ -74,7 +74,9 @@ class RawShareApiController extends Controller {
 		}
 
 		$token = (string)$share->getToken();
-		$enabled = $this->registry->isEnabled($shareId);
+		// A password-protected share is never served raw, whatever is stored.
+		$passwordProtected = $share->getPassword() !== null;
+		$enabled = !$passwordProtected && $this->registry->isEnabled($shareId);
 		$csp = $this->registry->getCsp($shareId);
 		$rawOnly = $enabled ? $this->registry->isRawOnly($shareId) : false;
 
@@ -83,6 +85,7 @@ class RawShareApiController extends Controller {
 			'enabled' => $enabled,
 			'csp' => $csp,
 			'rawOnly' => $rawOnly,
+			'passwordProtected' => $passwordProtected,
 			'canEditCsp' => $this->canCurrentUserEditCsp(),
 			'token' => $token,
 			'rawUrl' => $this->urlBuilder->publicTokenUrl($token),
@@ -98,6 +101,11 @@ class RawShareApiController extends Controller {
 
 		$enabled = $this->toBool($this->request->getParam('enabled', false));
 		$rawOnly = $this->toBool($this->request->getParam('rawOnly', false));
+
+		// Raw delivery has no password prompt.
+		if ($enabled && $share->getPassword() !== null) {
+			return new DataResponse(['error' => 'password_protected'], 400);
+		}
 
 		if ($this->canCurrentUserEditCsp()) {
 			// Absent csp means unchanged, an empty string means clear.
@@ -180,7 +188,7 @@ class RawShareApiController extends Controller {
 				$out[] = [
 					'shareId' => $shareId,
 					'token' => $token,
-					'enabled' => $this->registry->isEnabled($shareId),
+					'enabled' => $share->getPassword() === null && $this->registry->isEnabled($shareId),
 					'rawUrl' => $this->urlBuilder->publicTokenUrl($token),
 				];
 			} catch (\Throwable $e) {
