@@ -81,7 +81,9 @@ class CspManager {
 		// get the raw request path (no query)
 		$uri = $_SERVER['REQUEST_URI'] ?? '';
 		$uriPath = parse_url($uri, PHP_URL_PATH) ?: $uri;
-		$uriPath = $this->normalizeRawPath(urldecode($uriPath));
+		// path_contains matches the path as requested, everything else the normalized form
+		$requestPath = urldecode($uriPath);
+		$uriPath = $this->normalizeRawPath($requestPath);
 
 		// Detect private URL form: /raw/u/{userId}/... or /apps/files_sharing_raw/u/{userId}/...
 		$isPrivate = false;
@@ -190,7 +192,7 @@ class CspManager {
 			// This is useful to match exact segments like "/html/".
 			if ($pat[0] === '/') {
 				// check both full request path and path-after-app-prefix
-				if (strpos($uriPath, $pat) !== false || strpos($afterTokenPath, $pat) !== false) {
+				if (strpos($requestPath, $pat) !== false || strpos($afterTokenPath, $pat) !== false) {
 					return $this->buildCspFromPolicy($policy);
 				}
 				continue;
@@ -198,7 +200,7 @@ class CspManager {
 
 			// If pattern does NOT start with '/', perform a plain substring match (no leading slash added).
 			// This makes 'html' match '/some_html_text/', '/htmlfile', 'some-html-data', etc.
-			if (strpos($uriPath, $pat) !== false || strpos($afterTokenPath, $pat) !== false) {
+			if (strpos($requestPath, $pat) !== false || strpos($afterTokenPath, $pat) !== false) {
 				return $this->buildCspFromPolicy($policy);
 			}
 		}
