@@ -257,6 +257,27 @@ class CspManagerTest extends TestCase {
 		self::assertSame("default-src 'self'", $this->manager->determineCspForRequest($this->fileNode()));
 	}
 
+	public function testPathContainsMatchesTheRootAliasAsRequested(): void {
+		$_SERVER['REQUEST_URI'] = '/raw/aBc123/page.txt';
+		$this->withRawCsp(['path_contains' => ['/raw/' => "default-src 'self'"]]);
+
+		self::assertSame("default-src 'self'", $this->manager->determineCspForRequest($this->fileNode()));
+	}
+
+	public function testPathContainsDoesNotMatchTheRssFormAsRaw(): void {
+		$_SERVER['REQUEST_URI'] = '/rss/feed.xml';
+		$this->withRawCsp(['path_contains' => ['raw' => "default-src 'self'"]]);
+
+		self::assertSame(CspManager::HARD_FALLBACK, $this->manager->determineCspForRequest($this->fileNode()));
+	}
+
+	public function testPathContainsDoesNotMatchTheNormalizedAppPath(): void {
+		$_SERVER['REQUEST_URI'] = '/raw/aBc123/page.txt';
+		$this->withRawCsp(['path_contains' => ['files_sharing' => "default-src 'self'"]]);
+
+		self::assertSame(CspManager::HARD_FALLBACK, $this->manager->determineCspForRequest($this->fileNode()));
+	}
+
 	// == Extension and mimetype matching ==
 
 	public function testExtensionMatchIsCaseInsensitive(): void {
