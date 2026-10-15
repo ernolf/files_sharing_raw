@@ -10,8 +10,8 @@
     "source": "ncmake"
   },
   "lint-eslint.yml": {
-    "hash": "9d8578f1857bedfef023454d0a69058e4698a5b792f04b96da26bd7ed4d2b786",
-    "sha": "43ef34c380bd2c2bf4b10204c62b8cc514ee961e",
+    "hash": "1f3a93278d5cd423731ecf793bbac351add22a5b503a6cbe6482783e97d2d3b8",
+    "sha": "c1353ce58b61c6661957a57b22dc14ddd79ca24c",
     "source": "nextcloud"
   },
   "lint-info-xml.yml": {
@@ -20,18 +20,18 @@
     "source": "nextcloud"
   },
   "lint-php-cs.yml": {
-    "hash": "e6047b215571aa2746bd3d2786a14b3e0122fc34e70755a29ff573bb21e1672c",
-    "sha": "06d0842fda7cde32f228dd9e64e5109d80b2adcf",
+    "hash": "b4629d23fddb88b395063d208afb2d21bdfa57ce00804018ae41ea208eef1bcd",
+    "sha": "6c924112daee71ffc2bd3a10151fc85d5f3c9cad",
     "source": "nextcloud"
   },
   "lint-php.yml": {
-    "hash": "4bd624d81366d349e2ae5895b610000534306db21e54870aec05a0ab622c8b01",
-    "sha": "e4c6e9ba63262bce9385f6ee430129c67defd0c3",
+    "hash": "99426a49edbd2bb764f7d03ce3565472fe2b3c13313061d27235638cc105ca6f",
+    "sha": "53b6f38ec62eee61a3d252d7f72c090acb3a94aa",
     "source": "nextcloud"
   },
   "lint-stylelint.yml": {
-    "hash": "6d1a25767a1c3a4805e51318a16bc7c860bf5bc6ca2e15d26248c525c7a3eca6",
-    "sha": "f648d4135ecebb04728a8ddd62c4740575412bf5",
+    "hash": "73b15c6d0aeebc9dc96ecbbe373bafd486192fa94746742da0b72fdd50d8a8ba",
+    "sha": "fd55805305634992007c4f03ea356529c9db870d",
     "source": "nextcloud"
   },
   "lint-vue-imports.yml": {
@@ -40,43 +40,43 @@
     "source": "ncmake"
   },
   "node-test.yml": {
-    "hash": "67f6fbfce74f408366789c7e7fb5533a6381d2be5a8601813ef78c00623bc7b6",
-    "sha": "279e84f0f9e59055908711dc6d4ceaffebce46ed",
+    "hash": "0bae6b053cdd1f377eff6038d486f02b0b26dabdb2105656566d4e85b7750bc5",
+    "sha": "5e3b6341e89bda402aad7865fece326f22b41f8e",
     "source": "nextcloud"
   },
   "npm-build.yml": {
-    "hash": "46787cd18785eb1ebe5945ecb1189b43307d3dc51339a584adc6491be52cccb9",
-    "sha": "f81723bd19a5dc196cd75185d8bc822a600a0d07",
+    "hash": "b9164a864d02426c4734f12727a5760e6dd4aeae41ee4bb8851257db59fbb290",
+    "sha": "22783c4a12b4705046b564d9329ec97c5c076af6",
     "source": "nextcloud"
   },
   "phpunit-mariadb.yml": {
-    "hash": "e58e4e70bbaaba1820c7204e67f2c10af2dca07065490c67d77bc7bcf22afcd0",
-    "sha": "55139b44f33eb4e3f9f5807336507f3282de5f83",
+    "hash": "2e3bff5503ebc48e45547508ba63d8609ffef0dd9c5d7246af9be0551c438632",
+    "sha": "3877ccd23151ea0d1127d8423438f0e3cbf659fb",
     "source": "nextcloud"
   },
   "phpunit-mysql.yml": {
-    "hash": "48f103bd51a077b1e1095399e582ed68a374bc0e6f7fe38569b6860419432929",
-    "sha": "a7d98c9cfe23c84edb8f52d546c11e06cffed97a",
+    "hash": "b732a84188b994ff6c6b7e73e5c39842810c1028ebbb7e6bd8e8a643db650f81",
+    "sha": "dac182a7ca9ffb3afc290b60e33771a474c8824e",
     "source": "nextcloud"
   },
   "phpunit-oci.yml": {
-    "hash": "6ee1d762fddbe0105674a3771f4f927b0f0b57a1d40dd59c6bdd38ecb75bb041",
-    "sha": "f3b17ff8fb56c40a898562ca93085c61175c1cb5",
+    "hash": "020d2fd1d90462d3fe08fc9b1a0c1786b6257753ad3fe0ccac256a8b60ad2599",
+    "sha": "ca76621e3d5e215313da64372e94efbd43ea3190",
     "source": "nextcloud"
   },
   "phpunit-pgsql.yml": {
-    "hash": "9caf1fdec2a774c09d3ac2aef5327786f5b3e11763b46102b99810789090f075",
-    "sha": "0d63f7dad1b30b9b82a5f0cb33d8421eb7f26f14",
+    "hash": "fd165579c3c47065d90353d61a2fce86a7fca36846eb1b32582546c454373a63",
+    "sha": "c7df90f18442cbf1f9a0c2b885c973c642069896",
     "source": "nextcloud"
   },
   "phpunit-sqlite.yml": {
-    "hash": "8faa6c1b5b6d585c769dd1e521b4f25bbc05ef4a3d152cceb7a9557828a63fa5",
-    "sha": "d6bcf8e7bb1d92e14aaf6c9b040225f6ede93a21",
+    "hash": "02f37d5ada3fe1e096d38fdb9f4fb3d8e7e63d91f539a3d6fb6dac3b03ff3c6c",
+    "sha": "ccafc63d35b845f6238e7b01fc057f76a4ebbd0e",
     "source": "nextcloud"
   },
   "psalm.yml": {
-    "hash": "02d1db3a1549f5fa933b7157fc1a18d4b4593b35745a1f18be3f49e6e0499bd8",
-    "sha": "d6e2d52f35742a6351cd571e092bd849397eae6a",
+    "hash": "9455962a22c7e0a7b5aa37f037d4898b76968d4fcbf88afa720466def9566c08",
+    "sha": "8500151dde5e2ab026b4e50b7641304e892f8a4b",
     "source": "nextcloud"
   },
   "release.yml": {
