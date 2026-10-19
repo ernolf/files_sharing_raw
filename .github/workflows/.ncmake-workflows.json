@@ -10,8 +10,8 @@
     "source": "ncmake"
   },
   "lint-eslint.yml": {
-    "hash": "1f3a93278d5cd423731ecf793bbac351add22a5b503a6cbe6482783e97d2d3b8",
-    "sha": "c1353ce58b61c6661957a57b22dc14ddd79ca24c",
+    "hash": "bebe2ac0c0fa4c5f178d0bb54060a45ba0c8dc2c9960bd3e61c6eca9a12bc539",
+    "sha": "8021ce587c8912cbce2d8372664a5c399db42de3",
     "source": "nextcloud"
   },
   "lint-info-xml.yml": {
@@ -30,8 +30,8 @@
     "source": "nextcloud"
   },
   "lint-stylelint.yml": {
-    "hash": "73b15c6d0aeebc9dc96ecbbe373bafd486192fa94746742da0b72fdd50d8a8ba",
-    "sha": "fd55805305634992007c4f03ea356529c9db870d",
+    "hash": "18d791dd95bfd70238cbcc90695a0494d050e53e7234583e9deb7ebb0d0f531f",
+    "sha": "39fb96e34a3c7615886b33e0a205724f896f1aba",
     "source": "nextcloud"
   },
   "lint-vue-imports.yml": {
@@ -40,13 +40,13 @@
     "source": "ncmake"
   },
   "node-test.yml": {
-    "hash": "0bae6b053cdd1f377eff6038d486f02b0b26dabdb2105656566d4e85b7750bc5",
-    "sha": "5e3b6341e89bda402aad7865fece326f22b41f8e",
+    "hash": "9f474cbad7bfc1abef01508bd6345494ff5ecb4ee02652b9045dffedbb6cdf66",
+    "sha": "4d9458a23e1d0dd508c2a2db9a05092ea9af18b2",
     "source": "nextcloud"
   },
   "npm-build.yml": {
-    "hash": "b9164a864d02426c4734f12727a5760e6dd4aeae41ee4bb8851257db59fbb290",
-    "sha": "22783c4a12b4705046b564d9329ec97c5c076af6",
+    "hash": "bc9bc6047db4af6f00d2c9c2e706e5803ead89f527108ec3dc1b680bc26d8c45",
+    "sha": "66c2538be34fe19a153c211b7ef717a7326e68c4",
     "source": "nextcloud"
   },
   "phpunit-mariadb.yml": {
