@@ -16,7 +16,7 @@ name: Release tarball
 #
 # appinfo/signature.json is not produced here. It is signed at tag time on the
 # maintainer's machine, where the key is, and travels in a secret gist whose id the
-# signed tag message names. This job reads it from there without any token and
+# signed tag message names. The build job reads it from there without any token and
 # verifies it against the certificate committed as .ncmake/certificate.crt before
 # it packs, so a runner build that does not match the signed one fails the release
 # instead of shipping.
@@ -27,14 +27,24 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+
+# A second run for the same release waits instead of attaching at the same time.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   tarball:
+    name: Build the tarball
     runs-on: ubuntu-latest
+    # The build runs the app's composer and npm steps, so it gets no token that
+    # may write to the repository; only the attach job below holds one.
+    permissions:
+      contents: read # checkout
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           # The tag object itself: its message carries the gist id, and its date
@@ -75,17 +85,27 @@ jobs:
           make build
           if [ -n "${SIGNED:-}" ]; then make integrity-check dist; else make dist; fi
 
-      - name: Locate the tarball
-        run: echo "TARBALL=$(ls build/artifacts/dist/*.tar.gz)" >> "$GITHUB_ENV"
-
       - name: Upload build artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-tarball
           path: build/artifacts/dist/*.tar.gz
 
+  attach:
+    name: Attach to release
+    needs: tarball
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # gh release upload
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-tarball
+          path: dist
+
       - name: Attach to release
-        if: github.event_name == 'release'
-        run: gh release upload "${GITHUB_REF_NAME}" "${TARBALL}" --clobber
+        run: gh release upload "${GITHUB_REF_NAME}" dist/*.tar.gz --clobber --repo "${GITHUB_REPOSITORY}"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
