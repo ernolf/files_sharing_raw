@@ -1,0 +1,329 @@
+# SPDX-FileCopyrightText: 2026 [ernolf] Raphael Gradenwitz <raphael.gradenwitz@googlemail.com>
+# SPDX-License-Identifier: MIT
+#
+# ncmake backport: a comment of "/backport to <branch>" on a pull request
+# applies its change to that branch and opens a pull request there, the command
+# of the Nextcloud backport bot. One command per line backports to several
+# branches at once. On a merged pull request it runs right away; on an open one
+# it runs when the pull request is merged.
+#
+# The backport is one commit. The job applies the commits of the pull request
+# with git cherry-pick --no-commit, and create-pull-request commits the result
+# through the API, so the commit is verified and signed off; a cherry-pick
+# committed in the runner would be unsigned, because no key lives there. The
+# original commit messages, sign-offs included, go into the commit message,
+# each with the "(cherry picked from commit ...)" line git cherry-pick -x adds.
+#
+# A conflict, an unknown branch or a command from someone without write access
+# leaves no branch behind: the job answers on the pull request with the reason
+# and, for a conflict, the commands for a manual backport.
+#
+# Authentication is the GitHub App of the workflow updater (Contents, Pull
+# requests and Workflows: write), so the backport pull request triggers CI and
+# may touch workflow files. Store its credentials as the
+# NCMAKE_UPDATER_CLIENT_ID and NCMAKE_UPDATER_PRIVATE_KEY secrets. See
+# https://github.com/ernolf/ncmake/wiki/Backport and
+# https://github.com/ernolf/ncmake/wiki/GitHub-App.
+
+name: ncmake backport
+
+on:
+  # "/backport to <branch>" in a pull request comment. issue_comment fires for
+  # every comment in the repository, plain issues included; the collect job
+  # filters down to pull request comments that carry the command.
+  issue_comment: # zizmor: ignore[dangerous-triggers] commands only from OWNER/MEMBER/COLLABORATOR, no comment text in run:
+    types: [created]
+  # The merge of a pull request that has commands waiting. pull_request_target
+  # and not pull_request: on a pull request from a fork, pull_request runs
+  # without the secrets, so the app token could not be minted. No code of the
+  # pull request runs here. Its commits are only fetched and cherry-picked onto
+  # the target branch, and the backport pull request runs CI like any other.
+  pull_request_target: # zizmor: ignore[dangerous-triggers] no code of the pull request runs, its commits are only cherry-picked
+    types: [closed]
+
+permissions:
+  contents: read
+
+jobs:
+  collect:
+    # Reads the commands and turns them into one matrix entry per target branch.
+    # A comment answers on its own pull request; a merge reads every comment of
+    # the pull request that was merged.
+    if: >-
+      (
+        github.event_name == 'issue_comment'
+        && github.event.issue.pull_request
+        && contains(github.event.comment.body, '/backport')
+      )
+      || (
+        github.event_name == 'pull_request_target'
+        && github.event.pull_request.merged == true
+      )
+    runs-on: ubuntu-latest
+    # Reading the comments and answering them is all the default token does.
+    permissions:
+      issues: write
+      pull-requests: write
+    outputs:
+      targets: ${{ steps.collect.outputs.targets }}
+    steps:
+      - name: Collect the commands
+        id: collect
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.issue.number || github.event.pull_request.number }}
+          # Only an issue_comment event carries these.
+          PR_STATE: ${{ github.event.issue.state }}
+          PR_MERGED_AT: ${{ github.event.issue.pull_request.merged_at }}
+        run: |
+          comments="$RUNNER_TEMP/comments.json"
+          if [ "$GITHUB_EVENT_NAME" = issue_comment ]; then
+            jq -c '[.comment]' "$GITHUB_EVENT_PATH" > "$comments"
+          else
+            gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR/comments" | jq -s -c 'add // []' > "$comments"
+          fi
+
+          # Who may ask is the author association: without it any passer-by
+          # could open pull requests against the maintenance branches.
+          allowed='["OWNER","MEMBER","COLLABORATOR"]'
+
+          # A line counts when it is the command and nothing else, the way the
+          # Nextcloud backport bot reads it. A branch name with "..", "//", a
+          # leading dot, dash or slash or a trailing dot or slash does not
+          # count: git refuses such a name, and ".." could climb out of the
+          # API path the name is put into. Several commands for one branch
+          # leave the newest, and the comments come oldest first.
+          targets=$(jq -c --argjson allowed "$allowed" '
+            [ .[]
+              | select(.author_association as $a | $allowed | index($a))
+              | .id as $id
+              | .body | split("\n")[] | rtrimstr("\r")
+              | capture("^/backport to (?<branch>[A-Za-z0-9._/-]+) *$")
+              | select(.branch | contains("..") or test("^[-./]|[./]$|//") | not)
+              | {branch, comment: $id} ]
+            | group_by(.branch) | map(last)' "$comments")
+
+          react() {
+            gh api --method POST "repos/$GITHUB_REPOSITORY/issues/comments/$1/reactions" -f content="$2" > /dev/null
+          }
+          answer() {
+            gh api --method POST "repos/$GITHUB_REPOSITORY/issues/$PR/comments" -f body="$1" > /dev/null
+          }
+
+          if [ "$GITHUB_EVENT_NAME" = issue_comment ]; then
+            id=$(jq -r '.[0].id' "$comments")
+            # The job also runs for a comment that only mentions /backport, so
+            # only a line that starts with the command gets an answer.
+            if ! jq -e '.[0].body | split("\n") | any(startswith("/backport"))' "$comments" > /dev/null; then
+              echo "targets=[]" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            if ! jq -e --argjson allowed "$allowed" '.[0].author_association as $a | $allowed | index($a)' "$comments" > /dev/null; then
+              answer "A backport can be requested by the owner, members and collaborators of this repository only."
+              echo "targets=[]" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            if [ "$targets" = '[]' ]; then
+              react "$id" confused
+              answer "The command was not understood. It is \`/backport to <branch>\` on a line of its own, one line per branch."
+              echo "targets=[]" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            react "$id" eyes
+            if [ -z "$PR_MERGED_AT" ]; then
+              if [ "$PR_STATE" = closed ]; then
+                answer "This pull request was closed without a merge, so there is nothing to backport."
+              else
+                echo "The pull request is not merged yet; the backport runs when it is."
+              fi
+              echo "targets=[]" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          echo "targets=$targets" >> "$GITHUB_OUTPUT"
+          echo "Backport targets: $targets"
+
+  backport:
+    needs: collect
+    if: needs.collect.outputs.targets != '' && needs.collect.outputs.targets != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.collect.outputs.targets) }}
+    # A second command for the same pull request and branch waits for this one
+    # instead of racing it on the same backport branch.
+    concurrency:
+      group: ncmake-backport-${{ github.event.issue.number || github.event.pull_request.number }}-${{ matrix.branch }}
+      cancel-in-progress: false
+    # Reactions and answers run on the default token; everything that touches
+    # the repository runs on the app token.
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    env:
+      PR: ${{ github.event.issue.number || github.event.pull_request.number }}
+      TARGET: ${{ matrix.branch }}
+      COMMENT_ID: ${{ matrix.comment }}
+      BACKPORT_BRANCH: ncmake/backport/${{ github.event.issue.number || github.event.pull_request.number }}/${{ matrix.branch }}
+    steps:
+      - name: Create app token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.NCMAKE_UPDATER_CLIENT_ID }}
+          private-key: ${{ secrets.NCMAKE_UPDATER_PRIVATE_KEY }}
+          # Without these the token carries every permission of the app.
+          permission-contents: write # push the backport branch
+          permission-pull-requests: write # open the pull request
+          permission-workflows: write # the change may touch .github/workflows/
+          permission-metadata: read
+
+      - name: Check the target branch
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          # matching-refs answers every branch the name is a prefix of, so only
+          # an exact match counts.
+          if ! gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/heads/$TARGET" \
+              --jq '.[].ref' | grep -qxF "refs/heads/$TARGET"; then
+            echo "The branch \`$TARGET\` does not exist in this repository." > "$RUNNER_TEMP/backport-failure.md"
+            exit 1
+          fi
+
+      - name: Checkout the target branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ matrix.branch }}
+          token: ${{ steps.app-token.outputs.token }}
+          # The commits of the pull request are fetched below on the same
+          # credentials. The job runs no code from the checkout, and the post
+          # step removes them again.
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Apply the change
+        id: apply
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          PR_TITLE: ${{ github.event.issue.title || github.event.pull_request.title }}
+        run: |
+          # The original commits, not the merge result: refs/pull/<n>/head keeps
+          # them whichever way the pull request was merged. Merge commits are
+          # left out, as the Nextcloud backport bot does.
+          git fetch --no-tags origin "+refs/pull/$PR/head:refs/remotes/origin/pull/$PR"
+          mapfile -t commits < <(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR/commits" \
+            --jq '.[] | select((.parents | length) <= 1) | .sha')
+          if [ "${#commits[@]}" -eq 0 ]; then
+            echo "The pull request has no commits to backport." > "$RUNNER_TEMP/backport-failure.md"
+            exit 1
+          fi
+
+          if ! git cherry-pick --no-commit "${commits[@]}" > "$RUNNER_TEMP/cherry-pick.log" 2>&1; then
+            cat "$RUNNER_TEMP/cherry-pick.log"
+            {
+              echo "The change does not apply to \`$TARGET\` without conflicts."
+              conflicts=$(git diff --name-only --diff-filter=U)
+              if [ -n "$conflicts" ]; then
+                echo
+                echo "Conflicting files:"
+                echo
+                while IFS= read -r f; do
+                  echo "- \`$f\`"
+                done <<< "$conflicts"
+              fi
+              echo
+              echo "Backport it by hand:"
+              echo
+              echo '```bash'
+              echo "git fetch origin $TARGET pull/$PR/head"
+              echo "git switch -c $BACKPORT_BRANCH origin/$TARGET"
+              echo "git cherry-pick -x ${commits[*]}"
+              echo "# resolve the conflicts, then git cherry-pick --continue"
+              echo "git push origin $BACKPORT_BRANCH"
+              echo '```'
+            } > "$RUNNER_TEMP/backport-failure.md"
+            exit 1
+          fi
+
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+          title="$PR_TITLE [$TARGET]"
+          delimiter="EOF_$(openssl rand -hex 16)"
+          {
+            echo "title=$title"
+            echo "message<<$delimiter"
+            echo "$title"
+            for c in "${commits[@]}"; do
+              echo
+              git log -1 --format=%B "$c" | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}'
+              echo
+              echo "(cherry picked from commit $c)"
+            done
+            echo "$delimiter"
+            echo "commits<<$delimiter"
+            printf -- '- %s\n' "${commits[@]}"
+            echo "$delimiter"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Open the backport pull request
+        id: cpr
+        if: steps.apply.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          sign-commits: true
+          signoff: true
+          base: ${{ matrix.branch }}
+          branch: ${{ env.BACKPORT_BRANCH }}
+          title: ${{ steps.apply.outputs.title }}
+          commit-message: ${{ steps.apply.outputs.message }}
+          body: |
+            Backport of #${{ env.PR }} to `${{ matrix.branch }}`, by the ncmake backport workflow.
+
+            Commits:
+
+            ${{ steps.apply.outputs.commits }}
+
+      - name: Report the backport as done
+        if: steps.apply.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/$GITHUB_REPOSITORY/issues/comments/$COMMENT_ID/reactions" \
+            -f content=rocket > /dev/null
+
+      - name: Report that nothing was to do
+        if: steps.apply.outputs.changed == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/$GITHUB_REPOSITORY/issues/$PR/comments" \
+            -f body="The change is already on \`$TARGET\`, so there is nothing to backport." > /dev/null
+
+      # The failed steps leave their reason in backport-failure.md.
+      - name: Report the failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          {
+            echo "The backport to \`$TARGET\` failed."
+            echo
+            if [ -s "$RUNNER_TEMP/backport-failure.md" ]; then
+              cat "$RUNNER_TEMP/backport-failure.md"
+            else
+              echo "See the run for the reason: $RUN_URL"
+            fi
+          } > "$RUNNER_TEMP/answer.md"
+          gh api --method POST "repos/$GITHUB_REPOSITORY/issues/comments/$COMMENT_ID/reactions" \
+            -f content=-1 > /dev/null || true
+          gh api --method POST "repos/$GITHUB_REPOSITORY/issues/$PR/comments" \
+            -F body=@"$RUNNER_TEMP/answer.md" > /dev/null
