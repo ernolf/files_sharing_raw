@@ -13,6 +13,13 @@ name: Release tarball
 # attaches it as a release asset. workflow_dispatch produces a downloadable
 # artifact for testing without publishing a release. No secrets, no App Store
 # upload: the store later only receives the download URL and a signature.
+#
+# appinfo/signature.json is not produced here. It is signed at tag time on the
+# maintainer's machine, where the key is, and travels in a secret gist whose id the
+# signed tag message names. The build job reads it from there without any token and
+# verifies it against the certificate committed as .ncmake/certificate.crt before
+# it packs, so a runner build that does not match the signed one fails the release
+# instead of shipping.
 
 on:
   release:
@@ -20,31 +27,85 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+
+# A second run for the same release waits instead of attaching at the same time.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   tarball:
+    name: Build the tarball
     runs-on: ubuntu-latest
+    # The build runs the app's composer and npm steps, so it gets no token that
+    # may write to the repository; only the attach job below holds one.
+    permissions:
+      contents: read # checkout
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # The tag object itself: its message carries the gist id, and its date
+          # the age reported below.
+          fetch-depth: 0
+
+      - name: Report the age of the tag
+        if: github.event_name == 'release'
+        run: |
+          created=$(git for-each-ref --format='%(creatordate:iso-strict)' "refs/tags/${GITHUB_REF_NAME}")
+          days=$(( ( $(date -u +%s) - $(date -u -d "${created}" +%s) ) / 86400 ))
+          # The signature only matches while the build is still reproducible from
+          # the tag. Age is the plainest sign that it may no longer be.
+          echo "Tag \`${GITHUB_REF_NAME}\` was created ${created}, ${days} day(s) ago." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fetch the signature named in the tag
+        if: github.event_name == 'release'
+        run: |
+          id=$(git for-each-ref --format='%(contents)' "refs/tags/${GITHUB_REF_NAME}" | sed -n 's/^ncmake-signature: *//p' | head -1)
+          if [ -z "${id}" ]; then
+            if [ -f .ncmake/certificate.crt ]; then
+              echo "::error::the tag names no signature, but .ncmake/certificate.crt marks this app as signed - an unsigned tarball is not attached"
+              exit 1
+            fi
+            echo "The tag names no signature and the app is not marked as signed." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          raw=$(curl -fsSL "https://api.github.com/gists/${id}" | python3 -c 'import json,sys;print(json.load(sys.stdin)["files"]["signature.json"]["raw_url"])')
+          curl -fsSL "${raw}" -o appinfo/signature.json
+          echo "SIGNED=1" >> "$GITHUB_ENV"
+          echo "Signature taken from gist \`${id}\`." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build the release tarball
-        run: make build && make dist
-
-      - name: Locate the tarball
-        run: echo "TARBALL=$(ls build/artifacts/dist/*.tar.gz)" >> "$GITHUB_ENV"
+        # With a signature: integrity-check holds the staged tree against it - the
+        # hashes recomputed file by file and the signature checked against the
+        # committed certificate - and dist packs that same staged tree.
+        run: |
+          make build
+          if [ -n "${SIGNED:-}" ]; then make integrity-check dist; else make dist; fi
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-tarball
           path: build/artifacts/dist/*.tar.gz
 
+  attach:
+    name: Attach to release
+    needs: tarball
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # gh release upload
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-tarball
+          path: dist
+
       - name: Attach to release
-        if: github.event_name == 'release'
-        run: gh release upload "${GITHUB_REF_NAME}" "${TARBALL}" --clobber
+        run: gh release upload "${GITHUB_REF_NAME}" dist/*.tar.gz --clobber --repo "${GITHUB_REPOSITORY}"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
