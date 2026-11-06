@@ -28,12 +28,12 @@
 	},
 	"dependencies": {
 		"@nextcloud/axios": "^2.6.0",
-		"@nextcloud/dialogs": "^7.5.0",
+		"@nextcloud/dialogs": "^7.6.0",
 		"@nextcloud/initial-state": "^3.0.0",
 		"@nextcloud/l10n": "^3.4.1",
 		"@nextcloud/router": "^3.2.0",
 		"@nextcloud/sharing": "^0.4.0",
-		"@nextcloud/vue": "^9.14.0",
+		"@nextcloud/vue": "^9.14.1",
 		"vue": "^3.5.44",
 		"vue-material-design-icons": "^5.4.0"
 	},
