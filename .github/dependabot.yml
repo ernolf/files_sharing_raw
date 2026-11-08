@@ -32,6 +32,29 @@ updates:
         patterns:
           - "*"
 
+  - package-ecosystem: composer
+    target-branch: stable0.7
+    directories:
+      - "/"
+      - "/vendor-bin/*"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build
+      include: scope
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
+    groups:
+      composer:
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+
   # Frontend
   - package-ecosystem: npm
     directory: "/"
@@ -49,3 +72,24 @@ updates:
       npm:
         patterns:
           - "*"
+
+  - package-ecosystem: npm
+    target-branch: stable0.7
+    directory: "/"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build
+      include: scope
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
+    groups:
+      npm:
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
