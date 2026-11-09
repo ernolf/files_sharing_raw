@@ -7,11 +7,20 @@
 # under .github/workflows/. Once that pull request is merged it deletes its own
 # branch, so no stale ncmake/ci/workflow-update branch is left behind.
 #
-# A comment of "@ncmake-updater rebase" on a pull request re-runs the update
-# job, which is all a rebase needs here: the job checks out the default branch,
-# regenerates the workflows and lets create-pull-request rebuild the branch from
-# that base. Going through the API is what keeps the commit verified -- a git
-# rebase in the runner would push unsigned commits, because no key lives there.
+# Besides the default branch it refreshes every stable* maintenance line whose
+# workflows ncmake manages, each through a pull request of its own against the
+# line from ncmake/ci/workflow-update-<branch>, the branch make workflows-update
+# PR=1 uses there. A line keeps the set of workflows of the tag it started from:
+# only those are refreshed, and a workflow the default branch gained later comes
+# over with make workflows-install.
+#
+# A comment of "@ncmake-updater rebase" on a pull request of the updater re-runs
+# the update job, which is all a rebase needs here: the job checks out the base
+# branch, regenerates the workflows and lets create-pull-request rebuild the
+# branch from that base. Going through the API is what keeps the commit verified
+# -- a git rebase in the runner would push unsigned commits, because no key
+# lives there. On any other pull request the comment is left alone, so another
+# workflow that opens pull requests through the same app can answer it there.
 #
 # Authentication is a GitHub App (Contents, Pull requests and Workflows: write),
 # minted per run as a short-lived token. The app is required because the default
@@ -35,13 +44,14 @@ on:
   workflow_dispatch:
   # React to a merge so the cleanup job can remove the updater's own branch.
   # This fires for every closed pull request in the repository; the cleanup job
-  # filters down to a merged ncmake/ci/workflow-update.
+  # filters down to a merged ncmake/ci/workflow-update branch.
   pull_request:
     types: [closed]
   # "@ncmake-updater rebase" in a pull request comment. issue_comment fires for
-  # every comment in the repository, plain issues included; the update job
-  # filters down to pull request comments that carry the command.
-  issue_comment: # zizmor: ignore[dangerous-triggers] commands only from OWNER/MEMBER/COLLABORATOR, no comment text in run:, default branch checked out
+  # every comment in the repository, plain issues included; the branches job
+  # filters down to comments on a pull request of the updater that carry the
+  # command.
+  issue_comment: # zizmor: ignore[dangerous-triggers] commands only from OWNER/MEMBER/COLLABORATOR, no comment text in run:, a branch of this repository checked out, never the pull request head
     types: [created]
 
 permissions:
@@ -52,14 +62,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  update:
-    # The scheduled/manual side: refresh the workflows and open the pull request.
-    # Skipped for the pull_request trigger, which only drives the cleanup job.
+  branches:
+    # The scheduled/manual side: pick the branches to refresh. Skipped for the
+    # pull_request trigger, which only drives the cleanup job.
     #
-    # The command is answered wherever it is written: the updater owns a single
-    # pull request, so a comment addressed to it can only mean that one. Who may
-    # ask is what matters, and that is the author association -- without it any
-    # passer-by could force-push the branch.
+    # Who may ask is what matters for the command, and that is the author
+    # association -- without it any passer-by could force-push an updater branch.
     if: >-
       github.event_name == 'schedule'
       || github.event_name == 'workflow_dispatch'
@@ -71,6 +79,76 @@ jobs:
           github.event.comment.author_association)
       )
     runs-on: ubuntu-latest
+    # Reacting to the comment and reading the branches and the pull request are
+    # all the default token is used for here. A reaction on a comment of a pull
+    # request needs Pull requests: write; Issues: write alone is answered with
+    # 403.
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    outputs:
+      matrix: ${{ steps.pick.outputs.matrix }}
+    steps:
+      - name: Pick the branches
+        id: pick
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          EVENT: ${{ github.event_name }}
+          PR: ${{ github.event.issue.number }}
+        run: |
+          default=$(gh api "repos/$REPO" --jq .default_branch)
+          bases=$default
+          if [ "$EVENT" = issue_comment ]; then
+            # The command rebuilds the pull request it is written on, and only
+            # one of the updater, pushed to this repository: on any other one
+            # nothing is picked and the comment stays unanswered here.
+            read -r head base head_repo < <(gh api "repos/$REPO/pulls/$PR" \
+              --jq '"\(.head.ref) \(.base.ref) \(.head.repo.full_name)"')
+            bases=
+            if [ "$head_repo" = "$REPO" ]; then
+              case $head in
+                ncmake/ci/workflow-update) [ "$base" != "$default" ] || bases=$base ;;
+                ncmake/ci/workflow-update-stable*) [ "$head" != "ncmake/ci/workflow-update-$base" ] || bases=$base ;;
+              esac
+            fi
+          else
+            # Only the lines ncmake manages workflows on: a branch without the
+            # lock file has no managed workflow to refresh, and a retired line
+            # whose branch is deleted is no longer listed.
+            for b in $(gh api --paginate "repos/$REPO/branches" --jq '.[].name | select(startswith("stable"))'); do
+              if gh api "repos/$REPO/contents/.github/workflows/.ncmake-workflows.json?ref=$b" --silent 2>/dev/null; then
+                bases=$(printf '%s\n%s' "$bases" "$b")
+              fi
+            done
+          fi
+          matrix=$(printf '%s\n' "$bases" | jq -Rsc --arg d "$default" \
+            'split("\n") | map(select(length > 0)) | map({base: ., branch: (if . == $d then "ncmake/ci/workflow-update" else "ncmake/ci/workflow-update-" + . end)})')
+          printf 'Branches to refresh:\n%s\n' "$bases"
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+      - name: Acknowledge the command
+        if: github.event_name == 'issue_comment' && steps.pick.outputs.matrix != '[]'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST \
+            "repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions" \
+            -f content=eyes
+
+  update:
+    # Refresh the workflows of one branch and open the pull request against it.
+    needs: branches
+    # A command on a pull request that is not the updater's picks no branch.
+    if: needs.branches.outputs.matrix != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      # A line that fails, for example one whose checkout predates ncmake, must
+      # not hold back the others.
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.branches.outputs.matrix) }}
     # Reacting to the comment is the only thing the default token is used for
     # here; everything that touches the repository runs on the app token.
     permissions:
@@ -90,18 +168,10 @@ jobs:
           permission-workflows: write # the branch changes .github/workflows/
           permission-metadata: read
 
-      - name: Acknowledge the command
-        if: github.event_name == 'issue_comment'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh api --method POST \
-            "repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions" \
-            -f content=eyes
-
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
+          ref: ${{ matrix.base }}
           persist-credentials: false
 
       - name: Refresh managed workflows from upstream
@@ -127,7 +197,8 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           sign-commits: true
           signoff: true
-          branch: ncmake/ci/workflow-update
+          base: ${{ matrix.base }}
+          branch: ${{ matrix.branch }}
           delete-branch: true
           add-paths: ${{ steps.refresh.outputs.paths }}
           title: 'ci: update managed CI workflows from upstream'
@@ -162,13 +233,19 @@ jobs:
     # what create-pull-request's delete-branch does). It uses the same GitHub
     # App as the update job, so it always has Contents: write regardless of the
     # repository's default token permissions. This only ever touches
-    # ncmake/ci/workflow-update, and is unrelated to the repository-wide
+    # ncmake/ci/workflow-update and the ncmake/ci/workflow-update-<branch> of a
+    # line, pushed to this repository, never a fork's branch of the same name,
+    # and is unrelated to the repository-wide
     # "Automatically delete head branches" setting
     # (see https://github.com/ernolf/ncmake/wiki/Deleting-merged-branches).
     if: >-
       github.event_name == 'pull_request'
       && github.event.pull_request.merged == true
-      && github.event.pull_request.head.ref == 'ncmake/ci/workflow-update'
+      && github.event.pull_request.head.repo.full_name == github.repository
+      && (
+        github.event.pull_request.head.ref == 'ncmake/ci/workflow-update'
+        || startsWith(github.event.pull_request.head.ref, 'ncmake/ci/workflow-update-stable')
+      )
     runs-on: ubuntu-latest
     steps:
       - name: Create app token
@@ -183,8 +260,9 @@ jobs:
       - name: Delete the merged updater branch if it is still there
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
-          ref="repos/${{ github.repository }}/git/refs/heads/ncmake/ci/workflow-update"
+          ref="repos/${{ github.repository }}/git/refs/heads/$HEAD_REF"
           # The repository's "Automatically delete head branches" setting, or a
           # fast-clicking admin, may have removed the branch already. Only delete
           # what is still there, and tolerate it vanishing between the check and
