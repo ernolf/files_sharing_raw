@@ -101,8 +101,8 @@ class PrivatePageController extends Controller {
 			'files_sharing_raw.privatePage.getByPath',
 			['userId' => $userId, 'path' => $path]
 		);
-		$qs = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY);
-		if (is_string($qs) && $qs !== '') {
+		$qs = $this->requestQueryString();
+		if ($qs !== '') {
 			$canonical .= '?' . $qs;
 		}
 		header('Location: ' . $canonical, true, 307);

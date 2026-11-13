@@ -83,8 +83,8 @@ class PubPageController extends Controller {
 		}
 
 		$target = $this->publicUrlBuilder->rssPath($path ?? '');
-		$qs = parse_url($uri, PHP_URL_QUERY);
-		if (is_string($qs) && $qs !== '') {
+		$qs = $this->requestQueryString();
+		if ($qs !== '') {
 			$target .= '?' . $qs;
 		}
 		header('Location: ' . $target, true, 307);
@@ -220,8 +220,8 @@ class PubPageController extends Controller {
 	#[PublicPage]
 	public function legacyByToken($token) {
 		$target = $this->publicUrlBuilder->rawPath((string)$token);
-		$qs = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY);
-		if (is_string($qs) && $qs !== '') {
+		$qs = $this->requestQueryString();
+		if ($qs !== '') {
 			$target .= '?' . $qs;
 		}
 		header('Location: ' . $target, true, 307);
@@ -233,8 +233,8 @@ class PubPageController extends Controller {
 	#[PublicPage]
 	public function legacyByTokenAndPath($token, $path) {
 		$target = $this->publicUrlBuilder->rawPath((string)$token, (string)$path);
-		$qs = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY);
-		if (is_string($qs) && $qs !== '') {
+		$qs = $this->requestQueryString();
+		if ($qs !== '') {
 			$target .= '?' . $qs;
 		}
 		header('Location: ' . $target, true, 307);
