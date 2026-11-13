@@ -66,6 +66,20 @@ trait RawResponse {
 	}
 
 	/**
+	 * Query string of the request without the leading '?', for the Location header
+	 * of a redirect. Empty when the request has none.
+	 *
+	 * parse_url() replaces every control character with an underscore, so the value
+	 * cannot end the header line.
+	 *
+	 * @psalm-taint-escape header
+	 */
+	protected function requestQueryString(): string {
+		$qs = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY);
+		return is_string($qs) ? $qs : '';
+	}
+
+	/**
 	 * Build Cache-Control header value.
 	 *
 	 * System config knobs (config/config.php):
