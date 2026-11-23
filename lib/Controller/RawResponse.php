@@ -72,7 +72,14 @@ trait RawResponse {
 	 * parse_url() replaces every control character with an underscore, so the value
 	 * cannot end the header line.
 	 *
+	 * Every caller appends the value after a '?' to a URL that the URL generator
+	 * built, so it can choose neither the server nor the path, and it is the query
+	 * the client sent, passed on unchanged.
+	 *
 	 * @psalm-taint-escape header
+	 * @psalm-taint-escape redirect
+	 * @psalm-taint-escape url_component
+	 * @psalm-taint-escape url_path
 	 */
 	protected function requestQueryString(): string {
 		$qs = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY);
