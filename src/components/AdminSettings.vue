@@ -32,8 +32,6 @@ import { computed, ref } from 'vue'
 import NcSelect from '@nextcloud/vue/components/NcSelect'
 import NcSettingsSection from '@nextcloud/vue/components/NcSettingsSection'
 
-import '@nextcloud/dialogs/style.css'
-
 const docUrl = 'https://github.com/ernolf/files_sharing_raw/wiki/Content-Security-Policy#-csp-editors'
 
 const allGroups = loadState('files_sharing_raw', 'all_groups', [])
